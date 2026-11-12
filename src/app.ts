@@ -20,6 +20,7 @@ import { parametrosRoutes } from './modules/zonas/parametros';
 import { disponibilidadRoutes } from './modules/reservas/disponibilidad-routes';
 import { reservasRoutes, misReservasRoutes, adminReservasRoutes } from './modules/reservas/routes';
 import { adminEstadisticasRoutes } from './modules/estadisticas/routes';
+import { auditoriaRoutes } from './modules/auditoria/routes';
 import { notificacionesRoutes } from './modules/notificaciones/routes';
 import { datosPersonalesRoutes } from './modules/datos-personales/routes';
 import { legalRoutes } from './modules/datos-personales/legal-routes';
@@ -78,6 +79,7 @@ export function createApp() {
   app.use('/admin', usuariosRoutes);
   app.use('/admin', adminReservasRoutes);
   app.use('/admin', adminEstadisticasRoutes);
+  app.use('/admin', auditoriaRoutes);
 
   if (process.env.NODE_ENV === 'test') {
     app.get('/_test/conflict', () => {

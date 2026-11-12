@@ -1,0 +1,58 @@
+<section>
+  <h1>Bitacora de auditoria</h1>
+
+  <p class="nota">
+    Solo lectura. Se muestran las 200 entradas mas recientes dentro del rango
+    filtrado.
+  </p>
+
+  <form method="get" action="/admin/bitacora" class="filtros">
+    <div>
+      <label for="desde">Desde</label>
+      <input id="desde" name="desde" type="date" value="<%= filtros.desde || '' %>" />
+    </div>
+    <div>
+      <label for="hasta">Hasta</label>
+      <input id="hasta" name="hasta" type="date" value="<%= filtros.hasta || '' %>" />
+    </div>
+    <button type="submit">Filtrar</button>
+  </form>
+
+  <% if (!entradas || entradas.length === 0) { %>
+  <p>No hay entradas con esos filtros.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Fecha (UTC)</th>
+        <th scope="col">Usuario</th>
+        <th scope="col">Accion</th>
+        <th scope="col">Entidad</th>
+        <th scope="col">Detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const entrada of entradas) { %>
+      <% /* mysql2 devuelve la columna JSON ya parseada; se re-textualiza
+             para poder escaparla en el bloque code. */ %>
+      <% const detalleTexto = typeof entrada.detalle === 'string'
+        ? entrada.detalle
+        : JSON.stringify(entrada.detalle); %>
+      <tr>
+        <td><%= entrada.creadaEn %></td>
+        <td><%= entrada.usuario %></td>
+        <td><%= entrada.accion %></td>
+        <td><%= entrada.entidad %> <%= entrada.entidadId %></td>
+        <td>
+          <% if (entrada.detalle !== null && entrada.detalle !== undefined) { %>
+          <code><%= detalleTexto %></code>
+          <% } else { %>
+          <span>&mdash;</span>
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
