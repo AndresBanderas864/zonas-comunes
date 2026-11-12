@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ValidationError } from '../../lib/errors';
 import {
   EnlaceInvalidoError,
+  esquemaCorreoRecuperacion,
   restablecerPassword,
   solicitarRecuperacion,
   validarTokenRecuperacion,
@@ -22,7 +23,18 @@ authRoutes.get('/recuperar', (_req, res) => {
 });
 
 authRoutes.post('/recuperar', async (req, res) => {
-  await solicitarRecuperacion(String(req.body?.correo ?? ''));
+  const entrada = esquemaCorreoRecuperacion.safeParse({
+    correo: String(req.body?.correo ?? ''),
+  });
+  if (!entrada.success) {
+    res.status(400).render('auth/recuperar', {
+      titulo: 'Recuperar contraseña',
+      error: entrada.error.issues[0].message,
+    });
+    return;
+  }
+
+  await solicitarRecuperacion(entrada.data.correo);
   res.render('auth/aviso', {
     titulo: 'Revisa tu correo',
     mensaje: MENSAJE_RECUPERACION,

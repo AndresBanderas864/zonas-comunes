@@ -170,6 +170,28 @@ export async function crearTokenRecuperacion(
   );
 }
 
+export async function invalidarTokensRecuperacion(
+  conn: PoolConnection,
+  usuarioId: string,
+): Promise<void> {
+  await conn.query(
+    `UPDATE TOKEN_VERIFICACION SET usado_en = NOW(3)
+     WHERE usuario_id = ? AND tipo = 'RESTABLECER_PASSWORD' AND usado_en IS NULL`,
+    [usuarioId],
+  );
+}
+
+export async function buscarEstadoUsuario(
+  conn: PoolConnection,
+  usuarioId: string,
+): Promise<string | null> {
+  const [filas] = await conn.query<RowDataPacket[]>(
+    'SELECT estado FROM USUARIO WHERE id = ?',
+    [usuarioId],
+  );
+  return filas[0] ? String(filas[0].estado) : null;
+}
+
 export async function buscarTokenRecuperacion(
   conn: PoolConnection,
   tokenHash: string,
