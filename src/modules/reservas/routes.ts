@@ -107,8 +107,16 @@ function validarFecha(valor: string | undefined): string | undefined {
     throw new ValidationError('La fecha debe tener formato AAAA-MM-DD');
   }
   const [anio, mes, dia] = valor.split('-').map(Number);
-  const ultimoDia = new Date(Date.UTC(anio!, (mes ?? 0) + 1, 0)).getUTCDate();
-  if ((mes ?? 0) < 1 || (mes ?? 0) > 12 || (dia ?? 0) < 1 || (dia ?? 0) > ultimoDia) {
+  // Dia 0 del mes en Date.UTC (mes es 1-based aqui, 0-based alla) es el
+  // ultimo dia del propio mes. Si el calculo desborda y sale NaN (anos
+  // extremos), se omite la comprobacion de calendario: el formato ya se valido.
+  const ultimoDia = new Date(Date.UTC(anio!, mes ?? 0, 0)).getUTCDate();
+  if (
+    (mes ?? 0) < 1 ||
+    (mes ?? 0) > 12 ||
+    (dia ?? 0) < 1 ||
+    (!Number.isNaN(ultimoDia) && (dia ?? 0) > ultimoDia)
+  ) {
     throw new ValidationError('La fecha no existe en el calendario');
   }
   return valor;

@@ -238,6 +238,24 @@ it('desde y hasta fuera de formato AAAA-MM-DD se rechazan con 400', async () => 
     .set('Accept', 'text/html');
   expect(imposible.status).toBe(400);
   expect(imposible.body.error.code).toBe('VALIDACION');
+
+  // 2026 no es bisiesto y abril tiene 30 dias: el formato pasa pero el
+  // calendario no. Antes del arreglo del ultimo dia, estos pasaban.
+  const febreroVeintinueve = await request(app)
+    .get('/admin/reservas')
+    .query({ hasta: '2026-02-29' })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(febreroVeintinueve.status).toBe(400);
+  expect(febreroVeintinueve.body.error.code).toBe('VALIDACION');
+
+  const abrilTreintaYUno = await request(app)
+    .get('/admin/reservas')
+    .query({ hasta: '2026-04-31' })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(abrilTreintaYUno.status).toBe(400);
+  expect(abrilTreintaYUno.body.error.code).toBe('VALIDACION');
 });
 
 it('desde y hasta validos o ausentes siguen respondiendo 200', async () => {
@@ -251,6 +269,14 @@ it('desde y hasta validos o ausentes siguen respondiendo 200', async () => {
     .set('Cookie', cookie)
     .set('Accept', 'text/html');
   expect(valido.status).toBe(200);
+
+  // 2028 es bisiesto y diciembre tiene 31 dias: deben pasar.
+  const bisiesto = await request(app)
+    .get('/admin/reservas')
+    .query({ desde: '2028-02-29', hasta: '2026-12-31' })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(bisiesto.status).toBe(200);
 
   const vacio = await request(app)
     .get('/admin/reservas')
