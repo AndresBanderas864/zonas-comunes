@@ -210,7 +210,7 @@ describe('administracion de invitaciones', () => {
       .set('Cookie', admin.cookie)
       .type('form')
       .send({ _csrf: admin.csrf, apartamentoId: randomUUID() });
-    expect(inexistente.status).toBe(400);
+    expect(inexistente.status).toBe(404);
 
     const [{ n }] = await query<{ n: number }>('SELECT COUNT(*) n FROM INVITACION');
     expect(n).toBe(0);

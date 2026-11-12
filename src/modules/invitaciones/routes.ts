@@ -62,6 +62,10 @@ invitacionesRoutes.post('/invitaciones', soloAdmin, async (req, res) => {
       await renderListado(res, 400, error.message, apartamentoId);
       return;
     }
+    if (error instanceof NotFoundError) {
+      await renderListado(res, 404, error.message, apartamentoId);
+      return;
+    }
     throw error;
   }
 });

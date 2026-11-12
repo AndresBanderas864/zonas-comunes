@@ -49,7 +49,7 @@ export async function crearInvitacion(
 
   await withTransaction(async (conn) => {
     if (!(await apartamentoExiste(conn, id))) {
-      throw new ValidationError('El apartamento no existe');
+      throw new NotFoundError('El apartamento no existe');
     }
 
     await insertarInvitacion(conn, {
