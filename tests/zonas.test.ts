@@ -245,4 +245,75 @@ describe('configuracion de zonas y horarios', () => {
     );
     expect(String(reserva.hora_fin)).toBe('14:00:00');
   });
+
+  it('rechaza una zona sin horarios', async () => {
+    const admin = await sembrarAdmin();
+    const res = await request(createApp())
+      .post('/admin/zonas/nueva')
+      .set('Cookie', admin.cookie)
+      .send(cuerpoZona({ csrf: admin.csrf, horarios: [] }));
+
+    expect(res.status).toBe(400);
+    expect(res.text).toContain('al menos un horario');
+
+    const [{ n }] = await query<{ n: number }>(
+      'SELECT COUNT(*) n FROM ZONA WHERE nombre = ?',
+      ['BBQ'],
+    );
+    expect(n).toBe(0);
+  });
+
+  it('un update invalido conserva la entrada y apunta al id correcto', async () => {
+    const admin = await sembrarAdmin();
+    const { zonaId } = await sembrarZonaConReserva();
+
+    const res = await request(createApp())
+      .post(`/admin/zonas/${zonaId}`)
+      .set('Cookie', admin.cookie)
+      .send(
+        cuerpoZona({
+          csrf: admin.csrf,
+          nombre: 'Salon Edit',
+          duracionBloqueMin: 70,
+          horarios: [{ diaSemana: 1, apertura: '10:00', cierre: '22:00' }],
+        }),
+      );
+
+    expect(res.status).toBe(400);
+    expect(res.text).toContain('value="Salon Edit"');
+    expect(res.text).toContain(`action="/admin/zonas/${zonaId}"`);
+
+    const [zona] = await query<{ nombre: string; duracion_bloque_min: number }>(
+      'SELECT nombre, duracion_bloque_min FROM ZONA WHERE id = ?',
+      [zonaId],
+    );
+    expect(zona.nombre).toBe('BBQ');
+    expect(Number(zona.duracion_bloque_min)).toBe(240);
+  });
+
+  it('un update invalido a un id inexistente devuelve 404 sin exponer el formulario de nueva', async () => {
+    const admin = await sembrarAdmin();
+    const inexistente = randomUUID();
+
+    const res = await request(createApp())
+      .post(`/admin/zonas/${inexistente}`)
+      .set('Cookie', admin.cookie)
+      .send(
+        cuerpoZona({
+          csrf: admin.csrf,
+          nombre: 'Fantasma',
+          duracionBloqueMin: 70,
+          horarios: [{ diaSemana: 1, apertura: '10:00', cierre: '22:00' }],
+        }),
+      );
+
+    expect(res.status).toBe(404);
+    expect(res.text).not.toContain('action="/admin/zonas/nueva"');
+
+    const [{ n }] = await query<{ n: number }>(
+      'SELECT COUNT(*) n FROM ZONA WHERE nombre = ?',
+      ['Fantasma'],
+    );
+    expect(n).toBe(0);
+  });
 });

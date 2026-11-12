@@ -1,14 +1,21 @@
 <%
   const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
-  const accion = zona ? `/admin/zonas/${zona.id}` : '/admin/zonas/nueva';
+  const accion = zonaId ? `/admin/zonas/${zonaId}` : '/admin/zonas/nueva';
+  const datos = valores || null;
   const porDia = new Map();
-  if (zona) {
-    for (const h of zona.horarios) porDia.set(h.diaSemana, h);
+  if (datos && Array.isArray(datos.horarios)) {
+    for (const h of datos.horarios) {
+      if (h) porDia.set(Number(h.diaSemana), h);
+    }
   }
-  const activa = zona ? zona.activa : true;
+  const campo = (nombre) => {
+    if (!datos || datos[nombre] === undefined || datos[nombre] === null) return '';
+    return datos[nombre];
+  };
+  const activa = datos ? Boolean(datos.activa) : true;
 %>
 <section>
-  <h1><%= zona ? `Editar zona: ${zona.nombre}` : 'Nueva zona' %></h1>
+  <h1><%= titulo %></h1>
   <% if (error) { %>
   <p class="mensaje mensaje-error" role="alert"><%= error %></p>
   <% } %>
@@ -19,22 +26,22 @@
     <p>
       <label for="nombre">Nombre</label><br />
       <input id="nombre" name="nombre" type="text" required maxlength="80"
-        value="<%= zona ? zona.nombre : '' %>" />
+        value="<%= campo('nombre') %>" />
     </p>
     <p>
       <label for="aforo">Aforo (personas)</label><br />
       <input id="aforo" name="aforo" type="number" min="1" step="1" required
-        value="<%= zona ? zona.aforo : '' %>" />
+        value="<%= campo('aforo') %>" />
     </p>
     <p>
       <label for="duracionBloqueMin">Duracion del bloque (minutos)</label><br />
       <input id="duracionBloqueMin" name="duracionBloqueMin" type="number" min="1" step="1" required
-        value="<%= zona ? zona.duracionBloqueMin : '' %>" />
+        value="<%= campo('duracionBloqueMin') %>" />
     </p>
     <p>
       <label for="maxCuposReserva">Cupos maximos por reserva</label><br />
       <input id="maxCuposReserva" name="maxCuposReserva" type="number" min="1" step="1" required
-        value="<%= zona ? zona.maxCuposReserva : '' %>" />
+        value="<%= campo('maxCuposReserva') %>" />
     </p>
     <p>
       <input id="activa" name="activa" type="checkbox" value="1" <%= activa ? 'checked' : '' %> />
@@ -48,8 +55,8 @@
         <input type="hidden" name="horarios[<%= dia - 1 %>][diaSemana]" value="<%= dia %>" />
         <label>
           <%= DIAS[dia - 1] %>
-          <input name="horarios[<%= dia - 1 %>][apertura]" type="time" value="<%= h ? h.apertura : '' %>" />
-          <input name="horarios[<%= dia - 1 %>][cierre]" type="time" value="<%= h ? h.cierre : '' %>" />
+          <input name="horarios[<%= dia - 1 %>][apertura]" type="time" value="<%= h && h.apertura ? h.apertura : '' %>" />
+          <input name="horarios[<%= dia - 1 %>][cierre]" type="time" value="<%= h && h.cierre ? h.cierre : '' %>" />
         </label>
       </p>
       <% } %>

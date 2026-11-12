@@ -76,7 +76,10 @@ const esquemaZonaInput = z.object({
     .int()
     .min(1, 'Los cupos maximos deben ser mayores que cero'),
   activa: coerceBooleano,
-  horarios: z.array(esquemaHorario).max(7, 'Maximo un horario por dia'),
+  horarios: z
+    .array(esquemaHorario)
+    .min(1, 'La zona debe tener al menos un horario')
+    .max(7, 'Maximo un horario por dia'),
 });
 
 function aMinutos(hora: string): number {

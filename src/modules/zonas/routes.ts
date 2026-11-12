@@ -35,12 +35,17 @@ function normalizarHorarios(
   } as unknown as ZonaInput;
 }
 
+type ContextoFormulario = {
+  titulo: string;
+  zonaId: string | null;
+  valores: Record<string, unknown> | null;
+};
+
 async function manejarEscritura(
   req: Request,
   res: Response,
   accion: () => Promise<unknown>,
-  vista: string,
-  contexto: Record<string, unknown>,
+  contexto: ContextoFormulario,
   exito: string,
 ): Promise<void> {
   try {
@@ -49,9 +54,10 @@ async function manejarEscritura(
     res.redirect('/admin/zonas');
   } catch (error) {
     if (error instanceof ValidationError) {
-      res
-        .status(400)
-        .render(vista, { ...contexto, error: error.message, titulo: contexto.titulo });
+      res.status(400).render('admin/zona-form', {
+        ...contexto,
+        error: error.message,
+      });
       return;
     }
     if (error instanceof NotFoundError) {
@@ -59,15 +65,20 @@ async function manejarEscritura(
       return;
     }
     if (error instanceof ConflictError) {
-      res.status(409).render(vista, {
+      res.status(409).render('admin/zona-form', {
         ...contexto,
         error: error.message,
-        titulo: contexto.titulo,
       });
       return;
     }
     throw error;
   }
+}
+
+function cuerpoRecibido(
+  entrada: ZonaInput,
+): Record<string, unknown> {
+  return entrada as unknown as Record<string, unknown>;
 }
 
 zonasRoutes.get('/zonas', soloAdmin, async (_req, res) => {
@@ -78,18 +89,19 @@ zonasRoutes.get('/zonas', soloAdmin, async (_req, res) => {
 zonasRoutes.get('/zonas/nueva', soloAdmin, (_req, res) => {
   res.render('admin/zona-form', {
     titulo: 'Nueva zona',
-    zona: null,
+    zonaId: null,
+    valores: null,
     error: null,
   });
 });
 
 zonasRoutes.post('/zonas/nueva', soloAdmin, async (req, res) => {
+  const entrada = normalizarHorarios(req.body);
   await manejarEscritura(
     req,
     res,
-    () => crearZona(normalizarHorarios(req.body), actorId(req)),
-    'admin/zona-form',
-    { titulo: 'Nueva zona', zona: null },
+    () => crearZona(entrada, actorId(req)),
+    { titulo: 'Nueva zona', zonaId: null, valores: cuerpoRecibido(entrada) },
     'Zona creada.',
   );
 });
@@ -103,20 +115,30 @@ zonasRoutes.get('/zonas/:id', soloAdmin, async (req, res) => {
   }
   res.render('admin/zona-form', {
     titulo: `Editar zona: ${zona.nombre}`,
-    zona,
+    zonaId: id,
+    valores: zona,
     error: null,
   });
 });
 
 zonasRoutes.post('/zonas/:id', soloAdmin, async (req, res) => {
   const id = String(req.params.id);
-  const zona = await obtenerZona(id);
+  const existente = await obtenerZona(id);
+  if (!existente) {
+    res.status(404).render('errors/404', { titulo: 'Zona no encontrada' });
+    return;
+  }
+
+  const entrada = normalizarHorarios(req.body);
   await manejarEscritura(
     req,
     res,
-    () => actualizarZona(id, normalizarHorarios(req.body), actorId(req)),
-    'admin/zona-form',
-    { titulo: zona ? `Editar zona: ${zona.nombre}` : 'Editar zona', zona },
+    () => actualizarZona(id, entrada, actorId(req)),
+    {
+      titulo: `Editar zona: ${existente.nombre}`,
+      zonaId: id,
+      valores: cuerpoRecibido(entrada),
+    },
     'Zona actualizada.',
   );
 });
