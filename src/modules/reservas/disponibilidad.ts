@@ -1,5 +1,20 @@
 import { query } from '../../db/pool';
+import {
+  obtenerZonaActiva as repoObtenerZonaActiva,
+  listarZonasActivas as repoListarZonasActivas,
+  type ZonaActiva,
+} from './repository';
 import { generarBloques } from './bloques';
+
+export type { ZonaActiva };
+
+export function obtenerZonaActiva(zonaId: string): Promise<ZonaActiva | null> {
+  return repoObtenerZonaActiva(zonaId);
+}
+
+export function listarZonasActivas(): Promise<ZonaActiva[]> {
+  return repoListarZonasActivas();
+}
 
 export type BloqueDisponible = {
   horaInicio: string;

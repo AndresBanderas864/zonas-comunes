@@ -1,18 +1,17 @@
 import { Router } from 'express';
-import { query } from '../../db/pool';
 import { NotFoundError, ValidationError } from '../../lib/errors';
-import { listarBloquesDisponibles } from './disponibilidad';
-
-type ZonaFila = { id: string; nombre: string };
+import {
+  listarBloquesDisponibles,
+  listarZonasActivas,
+  obtenerZonaActiva,
+} from './disponibilidad';
 
 const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
 export const disponibilidadRoutes = Router();
 
 disponibilidadRoutes.get('/', async (req, res) => {
-  const zonas = await query<ZonaFila>(
-    `SELECT id, nombre FROM ZONA WHERE activa = 1 ORDER BY nombre`,
-  );
+  const zonas = await listarZonasActivas();
 
   const zona = typeof req.query.zona === 'string' ? req.query.zona : '';
   const fecha = typeof req.query.fecha === 'string' ? req.query.fecha : '';
@@ -37,11 +36,7 @@ disponibilidadRoutes.get('/:zonaId/:fecha', async (req, res) => {
     throw new ValidationError('La fecha debe tener formato AAAA-MM-DD');
   }
 
-  const zonas = await query<ZonaFila>(
-    'SELECT id, nombre FROM ZONA WHERE id = ? AND activa = 1',
-    [zonaId],
-  );
-  const zona = zonas[0];
+  const zona = await obtenerZonaActiva(zonaId);
   if (!zona) {
     throw new NotFoundError('La zona no existe o no esta activa');
   }
