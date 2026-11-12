@@ -611,7 +611,7 @@ git commit -m "feat: calculo de disponibilidad por bloque"
   - `tests/helpers/fixtures.ts`: `crearUsuarioConApartamento(rol, numero): Promise<UsuarioSesion>`, `crearZonaConAforo(aforo: number, duracionMin: number): Promise<Zona>`, `postReserva(usuario, body)` (supertest con cookie de sesión; completa `zonaId`, `fecha` y `horaInicio` con el contexto del test de concurrencia).
 - Reglas: zona activa; `fecha` entre hoy y hoy + `anticipacion_dias`; bloque existe en `HORARIO_ZONA` del día; `1 <= cupos <= max_cupos_reserva`; cupos ≤ aforo; límites día/semana del apartamento (no canceladas); **no puede existir otra reserva no cancelada del mismo apartamento en la misma zona+fecha+hora_inicio**.
 
-- [ ] **Step 1: Tests de reglas**
+- [x] **Step 1: Tests de reglas**
 
 ```ts
 it('crea la reserva y la deja CONFIRMADA', async () => { /* 201 */ });
@@ -644,7 +644,7 @@ it('revalida el aforo cambiado después del GET', async () => {
 });
 ```
 
-- [ ] **Step 2: Test de concurrencia (debe fallar con la implementación ingenua)**
+- [x] **Step 2: Test de concurrencia (debe fallar con la implementación ingenua)**
 
 El setup crea **20 usuarios en 20 apartamentos distintos** (el límite es por apartamento y el duplicado es por apartamento; con menos apartamentos el test mediría otra cosa), una zona con aforo 10 y un bloque de 10:00.
 
@@ -663,7 +663,7 @@ it('20 reservas simultáneas de 2 cupos sobre aforo 10: exactamente 5 exitosas',
 });
 ```
 
-- [ ] **Step 3: Implementar la transacción del diseño §9.2**
+- [x] **Step 3: Implementar la transacción del diseño §9.2**
 
 ```
 START TRANSACTION
@@ -686,9 +686,9 @@ El chequeo de duplicado va **después** del `UPDATE` y usa `FOR UPDATE` (lectura
 
 Si MariaDB responde `1213` (deadlock) al insertar la fila del bloque, la transacción se reintenta **una vez** con un `ROLLBACK` previo; si vuelve a fallar, responde 409. Sin este reintento, el test de 20 peticiones puede producir un 5xx esporádico.
 
-- [ ] **Step 4: Verificar.** Run: `npx vitest run tests/reservas.test.ts tests/concurrencia.test.ts` → PASS.
+- [x] **Step 4: Verificar.** Run: `npx vitest run tests/reservas.test.ts tests/concurrencia.test.ts` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/reservas src/views/reservas tests/helpers/fixtures.ts tests/reservas.test.ts tests/concurrencia.test.ts
