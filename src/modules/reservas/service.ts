@@ -125,9 +125,21 @@ async function contarNoCanceladas(
   return Number((filas[0] as { n: number }).n);
 }
 
-// Diseno 9.2. Orden obligatorio: el INSERT ODKU es la PRIMERA sentencia de la
-// transaccion. Cualquier lectura plana anterior abriria el snapshot de
-// REPEATABLE READ y MariaDB responderia 1020 al tocar la fila del bloque.
+// Diseno 9.2. Orden obligatorio de sentencias:
+//  1. Lock exclusivo de la fila del apartamento (lectura bloqueante, corriente).
+//  2. INSERT ODKU de la fila del bloque.
+//  3. Las lecturas planas (ZONA, HORARIO, conteos) abri Aqui el snapshot de
+//     REPEATABLE READ, ya con ambos locks tomados.
+// Cualquier lectura plana antes del ODKU abriria el snapshot antes de tocar la
+// fila del bloque y MariaDB responderia 1020 (ER_CHECKREAD); por eso las
+// sentencias 1 y 2 son bloqueantes. El lock del apartamento (1) es la clave de
+// la correccion TOCTOU de los limites dia/semana (3): un perdedor de la
+// carrera espera el commit del ganador en (1) y su snapshot, abierto despues,
+// ya incluye las reservas comprometidas del apartamento, por lo que el conteo
+// (3) es real y no una foto anterior. Sin este lock, dos POST del MISMO
+// apartamento en bloques distintos ni siquiera se ven entre si (filas de
+// OCUPACION_BLOQUE distintas, sin contencion). Apartamentos distintos bloquean
+// filas distintas: la concurrencia entre usuarios sigue siendo paralela.
 async function transaccionReserva(
   conn: PoolConnection,
   usuarioId: string,
@@ -136,7 +148,12 @@ async function transaccionReserva(
   maxReservasDia: number,
   maxReservasSemana: number,
 ): Promise<Reserva> {
-  // Asegura la fila del bloque sin bloquear de mas (no-op si ya existe) y
+  // (1) Serializa por apartamento ANTES de contar los limites dia/semana.
+  await conn.query(`SELECT id FROM APARTAMENTO WHERE id = ? FOR UPDATE`, [
+    apartamentoId,
+  ]);
+
+  // (2) Asegura la fila del bloque sin bloquear de mas (no-op si ya existe) y
   // toma su lock: aqui se serializan los POST concurrentes del mismo bloque.
   await conn.query(
     `INSERT INTO OCUPACION_BLOQUE (zona_id, fecha, hora_inicio, cupos_ocupados)
@@ -182,7 +199,8 @@ async function transaccionReserva(
     throw new ValidationError('El bloque no esta en el horario de la zona');
   }
 
-  // Limites del apartamento (9.3), contados dentro de la transaccion.
+  // (3) Limites del apartamento (9.3): lectura de snapshot, segura porque el
+  // lock del apartamento en (1) la abre despues del ultimo commit propio.
   const enDia = await contarNoCanceladas(conn, apartamentoId, 'fecha = ?', [
     datos.fecha,
   ]);
