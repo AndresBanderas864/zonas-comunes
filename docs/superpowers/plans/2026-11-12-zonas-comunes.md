@@ -706,7 +706,7 @@ git commit -m "feat: reserva de bloques con control de aforo concurrente"
 **Interfaces:**
 - Produces: `cancelarReserva(usuario: UsuarioSesion, reservaId: string, motivo?: string): Promise<void>` — permitido si es `RESIDENTE` del mismo apartamento o `ADMINISTRADOR`; no permitido si `VENCIDA`; si ya estaba `CANCELADA`, lanza `ConflictError(409)` sin volver a restar cupos. Si el actor es `ADMINISTRADOR`, deja `BITACORA` con `accion='reserva.cancelar_admin'`.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('cancelar devuelve los cupos al bloque', async () => { /* contador baja exactamente cupos */ });
@@ -719,19 +719,19 @@ it('cancelaciones simultáneas nunca dejan el contador negativo', async () => {
 });
 ```
 
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/cancelacion.test.ts`
 Expected: FAIL — no existe `src/modules/reservas/cancelacion.ts`.
 
-- [ ] **Step 3: Implementar** la transacción §9.2 inversa: `UPDATE RESERVA ... WHERE estado='CONFIRMADA'`; si afecta 0 filas, `ConflictError`; si afecta 1, `UPDATE OCUPACION_BLOQUE ... - cupos` y auditoría cuando corresponde.
+- [x] **Step 3: Implementar** la transacción §9.2 inversa: `UPDATE RESERVA ... WHERE estado='CONFIRMADA'`; si afecta 0 filas, `ConflictError`; si afecta 1, `UPDATE OCUPACION_BLOQUE ... - cupos` y auditoría cuando corresponde.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/cancelacion.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/reservas tests/cancelacion.test.ts
