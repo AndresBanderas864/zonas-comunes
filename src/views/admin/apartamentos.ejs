@@ -1,0 +1,70 @@
+<%
+  const enEdicion = Boolean(editando);
+  const accion = enEdicion ? `/admin/apartamentos/${editando.id}` : '/admin/apartamentos';
+  const datos = valores || null;
+  const campo = (nombre) => {
+    if (!datos || datos[nombre] === undefined || datos[nombre] === null) return '';
+    return datos[nombre];
+  };
+%>
+<section>
+  <h1>Apartamentos</h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="<%= accion %>">
+    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% } %>
+    <p>
+      <label for="torreInterior">Torre / Interior</label><br />
+      <input id="torreInterior" name="torreInterior" type="text" required maxlength="20"
+        value="<%= campo('torreInterior') %>" />
+    </p>
+    <p>
+      <label for="numero">Numero</label><br />
+      <input id="numero" name="numero" type="text" required maxlength="20"
+        value="<%= campo('numero') %>" />
+    </p>
+    <p>
+      <button type="submit"><%= enEdicion ? 'Guardar cambios' : 'Crear apartamento' %></button>
+      <% if (enEdicion) { %>
+      <a href="/admin/apartamentos">Cancelar edicion</a>
+      <% } %>
+    </p>
+  </form>
+
+  <% if (!apartamentos || apartamentos.length === 0) { %>
+  <p>Aun no hay apartamentos registrados.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Torre / Interior</th>
+        <th scope="col">Numero</th>
+        <th scope="col">Creado</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const apto of apartamentos) { %>
+      <tr>
+        <th scope="row"><%= apto.torreInterior %></th>
+        <td><%= apto.numero %></td>
+        <td><%= apto.creadoEn %></td>
+        <td>
+          <a href="/admin/apartamentos/<%= apto.id %>">Editar</a>
+          <form method="post" action="/admin/apartamentos/<%= apto.id %>/eliminar">
+            <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <% } %>
+            <button type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>

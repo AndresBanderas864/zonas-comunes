@@ -1,0 +1,46 @@
+<section>
+  <h1>Usuarios</h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+
+  <% if (!usuarios || usuarios.length === 0) { %>
+  <p>Aun no hay usuarios registrados.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Nombre</th>
+        <th scope="col">Correo</th>
+        <th scope="col">Rol</th>
+        <th scope="col">Apartamento</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const u of usuarios) { %>
+      <tr>
+        <th scope="row"><%= u.nombre %></th>
+        <td><%= u.correo %></td>
+        <td><%= u.rol %></td>
+        <td><%= u.apartamento ?? '-' %></td>
+        <td><%= u.estado %></td>
+        <td>
+          <% if (u.estado === 'ACTIVA' && usuario && u.id !== usuario.id) { %>
+          <form method="post" action="/admin/usuarios/<%= u.id %>/desactivar">
+            <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <% } %>
+            <button type="submit">Desactivar</button>
+          </form>
+          <% } else { %>
+          &mdash;
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>

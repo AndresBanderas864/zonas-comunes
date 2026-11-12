@@ -12,6 +12,9 @@ import { flash } from './middleware/flash';
 import { layoutRender } from './middleware/render';
 import { authRoutes } from './modules/auth/routes';
 import { loginRoutes } from './modules/auth/login-routes';
+import { apartamentosRoutes } from './modules/apartamentos/routes';
+import { invitacionesRoutes } from './modules/invitaciones/routes';
+import { usuariosRoutes } from './modules/usuarios/routes';
 import { zonasRoutes } from './modules/zonas/routes';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -51,6 +54,9 @@ export function createApp() {
   app.use('/vigilancia', requireRole('VIGILANTE', 'ADMINISTRADOR'));
   app.use('/admin', requireRole('ADMINISTRADOR'));
   app.use('/admin', zonasRoutes);
+  app.use('/admin', apartamentosRoutes);
+  app.use('/admin', invitacionesRoutes);
+  app.use('/admin', usuariosRoutes);
 
   if (process.env.NODE_ENV === 'test') {
     app.get('/_test/conflict', () => {

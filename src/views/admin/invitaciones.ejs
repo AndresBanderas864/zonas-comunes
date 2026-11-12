@@ -1,0 +1,64 @@
+<section>
+  <h1>Invitaciones</h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+
+  <form method="post" action="/admin/invitaciones">
+    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% } %>
+    <p>
+      <label for="apartamentoId">Apartamento</label><br />
+      <select id="apartamentoId" name="apartamentoId" required>
+        <option value="">Seleccione un apartamento</option>
+        <% for (const apto of apartamentos) { %>
+        <option value="<%= apto.id %>" <%= seleccionado === apto.id ? 'selected' : '' %>>
+          <%= `${apto.torreInterior}-${apto.numero}` %>
+        </option>
+        <% } %>
+      </select>
+    </p>
+    <p><button type="submit">Crear invitacion</button></p>
+  </form>
+
+  <p class="nota">
+    El enlace de invitacion se muestra una sola vez al crearla y vence en 7 dias.
+  </p>
+
+  <% if (!invitaciones || invitaciones.length === 0) { %>
+  <p>Aun no hay invitaciones.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Apartamento</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Vence</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const inv of invitaciones) { %>
+      <tr>
+        <th scope="row"><%= inv.apartamento %></th>
+        <td><%= inv.estado %></td>
+        <td><%= inv.venceEn %></td>
+        <td>
+          <% if (inv.estado === 'VIGENTE') { %>
+          <form method="post" action="/admin/invitaciones/<%= inv.id %>/revocar">
+            <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <% } %>
+            <button type="submit">Revocar</button>
+          </form>
+          <% } else { %>
+          &mdash;
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
