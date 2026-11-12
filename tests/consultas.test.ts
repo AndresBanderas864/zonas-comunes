@@ -218,3 +218,44 @@ it('un residente recibe 403 en /admin/reservas', async () => {
 
   expect(res.status).toBe(403);
 });
+
+it('desde y hasta fuera de formato AAAA-MM-DD se rechazan con 400', async () => {
+  const admin = await crearUsuarioConApartamento('ADMINISTRADOR', '900');
+  const cookie = await cookieDe(admin);
+
+  const basura = await request(app)
+    .get('/admin/reservas')
+    .query({ desde: 'basura' })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(basura.status).toBe(400);
+  expect(basura.body.error.code).toBe('VALIDACION');
+
+  const imposible = await request(app)
+    .get('/admin/reservas')
+    .query({ hasta: '2026-13-45' })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(imposible.status).toBe(400);
+  expect(imposible.body.error.code).toBe('VALIDACION');
+});
+
+it('desde y hasta validos o ausentes siguen respondiendo 200', async () => {
+  const admin = await crearUsuarioConApartamento('ADMINISTRADOR', '900');
+  const cookie = await cookieDe(admin);
+
+  const dia = hoyBogota();
+  const valido = await request(app)
+    .get('/admin/reservas')
+    .query({ desde: dia, hasta: sumarDiasBogota(dia, 7) })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(valido.status).toBe(200);
+
+  const vacio = await request(app)
+    .get('/admin/reservas')
+    .query({ desde: '' })
+    .set('Cookie', cookie)
+    .set('Accept', 'text/html');
+  expect(vacio.status).toBe(200);
+});
