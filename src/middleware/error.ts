@@ -8,6 +8,15 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   if (err instanceof AppError) {
+    if (
+      req.accepts(['json', 'html']) === 'html' &&
+      (err.status === 403 || err.status === 404)
+    ) {
+      const vista = err.status === 403 ? 'errors/403' : 'errors/404';
+      res.status(err.status).render(vista, { titulo: err.message });
+      return;
+    }
+
     res.status(err.status).json({
       error: { code: err.code, message: err.message },
     });

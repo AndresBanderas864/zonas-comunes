@@ -5,6 +5,9 @@ import type { Rol } from './lib/types';
 import { pool } from './db/pool';
 import { ConflictError } from './lib/errors';
 import { errorHandler } from './middleware/error';
+import { attachUsuario, redirigirInicio, requireAuth } from './middleware/auth';
+import { csrfProtection } from './middleware/csrf';
+import { requireRole } from './middleware/require-role';
 import { flash } from './middleware/flash';
 import { layoutRender } from './middleware/render';
 import { authRoutes } from './modules/auth/routes';
@@ -23,6 +26,10 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
   app.use(flash);
   app.use(layoutRender);
+  app.use(attachUsuario);
+  app.use(csrfProtection);
+
+  app.get('/', redirigirInicio);
 
   app.get('/health', async (_req, res, next) => {
     try {
@@ -35,6 +42,13 @@ export function createApp() {
 
   app.use(loginRoutes);
   app.use(authRoutes);
+
+  app.use('/reservas', requireAuth);
+  app.use('/mis-reservas', requireAuth);
+  app.use('/notificaciones', requireAuth);
+  app.use('/mi-cuenta', requireAuth);
+  app.use('/vigilancia', requireRole('VIGILANTE', 'ADMINISTRADOR'));
+  app.use('/admin', requireRole('ADMINISTRADOR'));
 
   if (process.env.NODE_ENV === 'test') {
     app.get('/_test/conflict', () => {
