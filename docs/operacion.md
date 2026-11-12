@@ -39,16 +39,28 @@ especificación considera la URL pública opcional: sin TLS público, mantenga
 La topología soportada por defecto es el proceso escuchando directamente (o
 TLS terminado en el host sobre él). **Detrás de un proxy inverso (nginx,
 ALB, Caddy) es obligatorio** añadir `app.set('trust proxy', ...)` con el
-salto correcto (p. ej. `1`) antes de montar los middlewares de límites de
-peticiones. Sin eso, `express-rate-limit` ve siempre la IP del proxy en
-`req.ip` y los límites de `/login` (10/15 min) y `/recuperar` (5/15 min)
-terminan bloqueando el despliegue **completo** tras unos pocos intentos.
-Nota sobre la advertencia de la librería: con `trust proxy` activado de forma
-permisiva (p. ej. `true` o un número de saltos), `express-rate-limit` valida
-el encabezado `X-Forwarded-For` y emite su advertencia de validación si la
-cadena de IPs no es consistente; con `trust proxy` desactivado la librería
-**no puede** detectar que hay un proxy delante, así que no advierte nada: el
-síntoma silencioso es exactamente el bloqueo global descrito arriba.
+número de saltos correcto (p. ej. `1`) antes de montar los middlewares de
+límites de peticiones. Qué ocurre en cada escenario, según la versión
+instalada de `express-rate-limit`:
+
+- **`trust proxy` desactivado (el valor por defecto) con un proxy que añade
+  `X-Forwarded-For`:** cada petición que traiga ese encabezado falla con un
+  error de validación visible (HTTP 500 con código de error de la librería),
+  no un bloqueo silencioso. El servidor deja de responder al login en cuanto
+  el proxy manda la cabecera: es ruidoso y se detecta al momento.
+- **`trust proxy = true`:** error de validación distinto, de evasión/suplantación:
+  con `true` cualquiera puede poner un `X-Forwarded-For` falso y saltarse el
+  límite por IP. No es una opción segura; use siempre un número de saltos.
+- **`trust proxy` con número de saltos (la config correcta, p. ej. `1`):**
+  no se dispara ningún error de validación. Aquí es donde el fallo es
+  **silencioso**: si el proxy no rellena realmente `X-Forwarded-For`, o si el
+  número de saltos no coincide con la topología real, todas las peticiones
+  comparten la IP del proxy y los límites de `/login` (10/15 min) y
+  `/recuperar` (5/15 min) terminan bloqueando el despliegue **completo** tras
+  unos pocos intentos de un solo usuario.
+
+Verifique en el proxy que efectivamente reescribe `X-Forwarded-For` y ajuste
+el número de saltos al conteo real de capas entre el cliente y el proceso.
 
 ### Base de datos
 
