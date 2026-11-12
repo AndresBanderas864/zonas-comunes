@@ -1007,17 +1007,17 @@ git commit -m "feat: endurecimiento de cabeceras, rate limit y secretos"
 **Interfaces:**
 - Produces: un recorrido completo en un solo test: migrar → seed → login admin → crear invitación → registro de residente → login → ver disponibilidad → reservar → ver notificación → cancelar → ver estadísticas → ver bitácora.
 
-- [ ] **Step 1: Escribir el test e2e** con `supertest` y cookies encadenadas.
-- [ ] **Step 2: Verlo fallar** si algo del flujo quedó desconectado.
-- [ ] **Step 3: Corregir lo que falte** (sin añadir funcionalidad nueva).
-- [ ] **Step 4: Verificar toda la suite**
+- [x] **Step 1: Escribir el test e2e** con `supertest` y cookies encadenadas.
+- [x] **Step 2: Verlo fallar** si algo del flujo quedó desconectado.
+- [x] **Step 3: Corregir lo que falte** (sin añadir funcionalidad nueva).
+- [x] **Step 4: Verificar toda la suite**
 
 Run: `npm test`
 Expected: todos los archivos en PASS, incluidos `tests/concurrencia.test.ts` y `tests/e2e.test.ts`.
 
-- [ ] **Step 5: README y operación** — requisitos, `docker compose up`, `npm run migrate`, `npm run seed`, credenciales demo, mapa de rutas, decisiones de alcance y trabajo futuro (los recortes del diseño §20).
+- [x] **Step 5: README y operación** — requisitos, `docker compose up`, `npm run migrate`, `npm run seed`, credenciales demo, mapa de rutas, decisiones de alcance y trabajo futuro (los recortes del diseño §20).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add tests/e2e.test.ts README.md docs/operacion.md
