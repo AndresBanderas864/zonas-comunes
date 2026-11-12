@@ -16,6 +16,7 @@ import { apartamentosRoutes } from './modules/apartamentos/routes';
 import { invitacionesRoutes } from './modules/invitaciones/routes';
 import { usuariosRoutes } from './modules/usuarios/routes';
 import { zonasRoutes } from './modules/zonas/routes';
+import { parametrosRoutes } from './modules/zonas/parametros';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -54,6 +55,7 @@ export function createApp() {
   app.use('/vigilancia', requireRole('VIGILANTE', 'ADMINISTRADOR'));
   app.use('/admin', requireRole('ADMINISTRADOR'));
   app.use('/admin', zonasRoutes);
+  app.use('/admin', parametrosRoutes);
   app.use('/admin', apartamentosRoutes);
   app.use('/admin', invitacionesRoutes);
   app.use('/admin', usuariosRoutes);

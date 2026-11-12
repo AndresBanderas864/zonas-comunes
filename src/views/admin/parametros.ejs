@@ -1,0 +1,34 @@
+<%
+  const datos = valores || {};
+  const campo = (nombre) => {
+    if (datos[nombre] === undefined || datos[nombre] === null) return '';
+    return datos[nombre];
+  };
+%>
+<section>
+  <h1><%= titulo %></h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+  <form method="post" action="/admin/parametros">
+    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% } %>
+    <p>
+      <label for="maxReservasSemana">Maximo de reservas por semana</label><br />
+      <input id="maxReservasSemana" name="maxReservasSemana" type="number" min="1" step="1" required
+        value="<%= campo('maxReservasSemana') %>" />
+    </p>
+    <p>
+      <label for="maxReservasDia">Maximo de reservas por dia</label><br />
+      <input id="maxReservasDia" name="maxReservasDia" type="number" min="1" step="1" required
+        value="<%= campo('maxReservasDia') %>" />
+    </p>
+    <p>
+      <label for="anticipacionDias">Anticipacion maxima (dias)</label><br />
+      <input id="anticipacionDias" name="anticipacionDias" type="number" min="1" step="1" required
+        value="<%= campo('anticipacionDias') %>" />
+    </p>
+    <p><button type="submit">Guardar parametros</button></p>
+  </form>
+</section>
