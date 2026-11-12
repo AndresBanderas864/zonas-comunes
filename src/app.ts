@@ -19,6 +19,7 @@ import { zonasRoutes } from './modules/zonas/routes';
 import { parametrosRoutes } from './modules/zonas/parametros';
 import { disponibilidadRoutes } from './modules/reservas/disponibilidad-routes';
 import { reservasRoutes, misReservasRoutes, adminReservasRoutes } from './modules/reservas/routes';
+import { vigilanciaRoutes } from './modules/reservas/vigilancia';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -59,6 +60,7 @@ export function createApp() {
   app.use('/notificaciones', requireAuth);
   app.use('/mi-cuenta', requireAuth);
   app.use('/vigilancia', requireRole('VIGILANTE', 'ADMINISTRADOR'));
+  app.use('/vigilancia', vigilanciaRoutes);
   app.use('/admin', requireRole('ADMINISTRADOR'));
   app.use('/admin', zonasRoutes);
   app.use('/admin', parametrosRoutes);

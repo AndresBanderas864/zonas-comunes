@@ -1,0 +1,29 @@
+<section>
+  <h1>Vigilancia del día</h1>
+  <p>Reservas del <strong><%= fecha %></strong>. Vista de solo lectura.</p>
+
+  <% if (reservas.length === 0) { %>
+  <p>No hay reservas activas para esta fecha.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Zona</th>
+        <th scope="col">Bloque</th>
+        <th scope="col">Apartamento</th>
+        <th scope="col">Cupos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const reserva of reservas) { %>
+      <tr>
+        <th scope="row"><%= reserva.zona %></th>
+        <td><%= reserva.horaInicio %> – <%= reserva.horaFin %></td>
+        <td><%= reserva.apartamento %></td>
+        <td><%= reserva.cupos %></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
