@@ -1,0 +1,15 @@
+<section>
+  <h1>Nueva contraseña</h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+  <form method="post" action="/restablecer/<%= token %>">
+    <p>
+      <label for="password">Nueva contraseña</label><br />
+      <input id="password" name="password" type="password" required minlength="8"
+        maxlength="200" autocomplete="new-password" />
+    </p>
+    <p><button type="submit">Guardar contraseña</button></p>
+  </form>
+  <p><a href="/login">Volver a iniciar sesión</a></p>
+</section>

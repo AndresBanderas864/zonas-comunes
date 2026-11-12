@@ -1,0 +1,15 @@
+<section>
+  <h1>Recuperar contraseña</h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+  <form method="post" action="/recuperar">
+    <p>
+      <label for="correo">Correo electrónico</label><br />
+      <input id="correo" name="correo" type="email" required maxlength="254"
+        autocomplete="username" />
+    </p>
+    <p><button type="submit">Enviar enlace</button></p>
+  </form>
+  <p><a href="/login">Volver a iniciar sesión</a></p>
+</section>
