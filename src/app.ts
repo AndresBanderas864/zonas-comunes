@@ -12,6 +12,7 @@ import { flash } from './middleware/flash';
 import { layoutRender } from './middleware/render';
 import { authRoutes } from './modules/auth/routes';
 import { loginRoutes } from './modules/auth/login-routes';
+import { zonasRoutes } from './modules/zonas/routes';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -49,6 +50,7 @@ export function createApp() {
   app.use('/mi-cuenta', requireAuth);
   app.use('/vigilancia', requireRole('VIGILANTE', 'ADMINISTRADOR'));
   app.use('/admin', requireRole('ADMINISTRADOR'));
+  app.use('/admin', zonasRoutes);
 
   if (process.env.NODE_ENV === 'test') {
     app.get('/_test/conflict', () => {
