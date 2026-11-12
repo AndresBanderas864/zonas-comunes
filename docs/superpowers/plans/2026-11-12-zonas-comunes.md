@@ -885,20 +885,20 @@ git commit -m "feat: jobs de vencimiento, recordatorios y limpieza"
   - `horasPico(desde: string, hasta: string): Promise<{ hora: number; diaSemana: number; reservas: number }[]>`
   - `cancelacionesPorZona(desde: string, hasta: string): Promise<{ zona: string; confirmadas: number; canceladas: number; porcentaje: number }[]>`
 
-- [ ] **Step 1: Tests** con datos sembrados: ocupación suma `CONFIRMADA` y `VENCIDA` (todo lo no cancelado); horas pico agrupa por hora y día; el porcentaje de cancelación se calcula sobre `(CONFIRMADA + VENCIDA)` y `CANCELADA`, de modo que una reserva vencida cuenta como uso y no como cancelación.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** con datos sembrados: ocupación suma `CONFIRMADA` y `VENCIDA` (todo lo no cancelado); horas pico agrupa por hora y día; el porcentaje de cancelación se calcula sobre `(CONFIRMADA + VENCIDA)` y `CANCELADA`, de modo que una reserva vencida cuenta como uso y no como cancelación.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/estadisticas.test.ts`
 Expected: FAIL — no existe `src/modules/estadisticas`.
 
-- [ ] **Step 3: Implementar** las tres consultas con rango de fechas y la vista con filtros; la etiqueta de ocupación dice "contra aforo actual".
+- [x] **Step 3: Implementar** las tres consultas con rango de fechas y la vista con filtros; la etiqueta de ocupación dice "contra aforo actual".
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/estadisticas.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/estadisticas src/views/admin tests/estadisticas.test.ts
