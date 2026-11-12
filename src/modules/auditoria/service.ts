@@ -54,7 +54,7 @@ type FilaAuditoria = {
   accion: string;
   entidad: string;
   entidad_id: string;
-  detalle: string | null;
+  detalle: unknown;
   creada_en: string;
 };
 
@@ -62,8 +62,8 @@ type FilaAuditoria = {
 // decision del brief (YAGNI): se devuelven las 200 entradas mas recientes en
 // orden descendente. El nombre del usuario se obtiene uniendo USUARIO por la
 // FK usuario_id. creada_en sale como ISO UTC (convencion de consultas de
-// reservas); detalle se deja como el JSON texto que devuelve MariaDB, para
-// que la vista lo escape con <%= %>.
+// reservas); mysql2 parsea la columna JSON a valores JS (u null), y se deja
+// asi: la vista la re-textualiza y la escapa al renderizar.
 export async function listarAuditoria(
   filtros: FiltrosAuditoria,
 ): Promise<Auditoria[]> {
