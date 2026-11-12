@@ -852,20 +852,20 @@ git commit -m "feat: notificaciones in-app con despachador y reintentos"
   - `crearRecordatorios(ahora?: Date): Promise<number>` — reservas que empiezan en 55–65 minutos
   - `limpiarSesionesExpiradas(ahora?: Date): Promise<number>`, `limpiarBitacoraAntigua(ahora?: Date): Promise<number>` (12 meses)
 
-- [ ] **Step 1: Tests** con fechas inyectadas (sin esperar al reloj): una reserva de ayer pasa a `VENCIDA` y el contador **no** cambia; una de dentro de una hora genera `RECORDATORIO`; una sesión de hace 31 días se borra.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** con fechas inyectadas (sin esperar al reloj): una reserva de ayer pasa a `VENCIDA` y el contador **no** cambia; una de dentro de una hora genera `RECORDATORIO`; una sesión de hace 31 días se borra.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/jobs.test.ts`
 Expected: FAIL — no existe `src/jobs`.
 
-- [ ] **Step 3: Implementar** los cuatro jobs con el reloj inyectable y registrarlos en `src/jobs/index.ts` con `node-cron` (vencidas cada 15 min, recordatorios cada 5 min, limpieza diaria).
+- [x] **Step 3: Implementar** los cuatro jobs con el reloj inyectable y registrarlos en `src/jobs/index.ts` con `node-cron` (vencidas cada 15 min, recordatorios cada 5 min, limpieza diaria).
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/jobs.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jobs src/server.ts tests/jobs.test.ts
