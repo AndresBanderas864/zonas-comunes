@@ -68,10 +68,11 @@ reservasRoutes.post('/', requireRole('RESIDENTE'), async (req, res) => {
   }
 });
 
-// El spec situa el historial en GET /mis-reservas; el router se monta en
-// /reservas, asi que la ruta completa es /reservas/mis-reservas (enlace de
-// destino del PRG de cancelacion).
-reservasRoutes.get('/mis-reservas', requireRole('RESIDENTE', 'ADMINISTRADOR'), async (req, res) => {
+// Historial del residente en la ruta del spec (/mis-reservas, enlazada por
+// el nav). Va en su propio router porque reservasRoutes se monta en /reservas.
+export const misReservasRoutes = Router();
+
+misReservasRoutes.get('/', requireRole('RESIDENTE', 'ADMINISTRADOR'), async (req, res) => {
   const reservas = req.usuario!.apartamentoId
     ? await listarReservasNoCanceladas(req.usuario!.apartamentoId)
     : [];
@@ -91,7 +92,7 @@ reservasRoutes.post(
 
       if (esNavegador) {
         req.flash('exito', 'Reserva cancelada.');
-        res.redirect('/reservas/mis-reservas');
+        res.redirect('/mis-reservas');
         return;
       }
 
@@ -99,7 +100,7 @@ reservasRoutes.post(
     } catch (error) {
       if (esNavegador && error instanceof ConflictError) {
         req.flash('error', error.message);
-        res.redirect('/reservas/mis-reservas');
+        res.redirect('/mis-reservas');
         return;
       }
       throw error;

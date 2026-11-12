@@ -12,6 +12,7 @@ import {
   fijarContextoReserva,
   mananaBogota,
   postReserva,
+  type Zona,
 } from './helpers/fixtures';
 
 const app = createApp();
@@ -70,7 +71,7 @@ async function estadoReserva(
 // Reserva de 2 cupos en el bloque 10:00 de manana, con su usuario dueno.
 async function preparar(
   numero: string,
-): Promise<{ zona: { id: string }; fecha: string; usuario: UsuarioSesion; reservaId: string }> {
+): Promise<{ zona: Zona; fecha: string; usuario: UsuarioSesion; reservaId: string }> {
   const zona = await crearZonaConAforo(10, 120);
   const fecha = mananaBogota();
   fijarContextoReserva({ zonaId: zona.id, fecha, horaInicio: BLOQUE });
@@ -219,7 +220,7 @@ it('la cancelacion por navegador redirige a mis-reservas y la lista oculta la ca
     { Accept: 'text/html' },
   );
   expect(res.status).toBe(302);
-  expect(res.headers.location).toBe('/reservas/mis-reservas');
+  expect(res.headers.location).toBe('/mis-reservas');
 
   // Se reenvia la cookie de flash que el 302 acabo de emitir (patron PRG).
   const crudas = res.headers['set-cookie'] as unknown;
@@ -228,7 +229,7 @@ it('la cancelacion por navegador redirige a mis-reservas y la lista oculta la ca
     .filter((c) => c.startsWith('flash='));
   const credenciales = await credencialesDe(usuario);
   const lista = await request(app)
-    .get('/reservas/mis-reservas')
+    .get('/mis-reservas')
     .set('Cookie', [credenciales.cookie, ...flashCookies].join('; '))
     .set('Accept', 'text/html');
 
@@ -236,4 +237,29 @@ it('la cancelacion por navegador redirige a mis-reservas y la lista oculta la ca
   expect(lista.text).toContain('Reserva cancelada');
   expect(lista.text).not.toContain(`/reservas/${primera.body.reserva.id}/cancelar`);
   expect(lista.text).toContain(`/reservas/${segunda.body.reserva.id}/cancelar`);
+});
+
+it('la ruta del nav /mis-reservas lista las reservas del residente', async () => {
+  const { zona, usuario } = await preparar('101');
+  const credenciales = await credencialesDe(usuario);
+
+  const lista = await request(app)
+    .get('/mis-reservas')
+    .set('Cookie', credenciales.cookie)
+    .set('Accept', 'text/html');
+
+  expect(lista.status).toBe(200);
+  expect(lista.text).toContain(zona.nombre);
+});
+
+it('un motivo de mas de 255 caracteres se rechaza con 400 sin cancelar', async () => {
+  const { zona, fecha, reservaId } = await preparar('101');
+  const admin = await crearUsuarioConApartamento('ADMINISTRADOR', '900');
+
+  const res = await postCancelar(admin, reservaId, { motivo: 'x'.repeat(300) });
+
+  expect(res.status).toBe(400);
+  expect(res.body.error.code).toBe('VALIDACION');
+  expect(await estadoReserva(reservaId)).toMatchObject({ estado: 'CONFIRMADA' });
+  expect(await cuposOcupados(zona.id, fecha)).toBe(2);
 });

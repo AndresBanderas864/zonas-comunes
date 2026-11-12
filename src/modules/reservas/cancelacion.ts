@@ -1,9 +1,17 @@
 import type { PoolConnection, ResultSetHeader } from 'mysql2/promise';
+import { z } from 'zod';
 import { query } from '../../db/pool';
-import { ConflictError, ForbiddenError, NotFoundError } from '../../lib/errors';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../lib/errors';
 import { registrarAuditoria } from '../auditoria/service';
 import type { UsuarioSesion } from '../auth/sessions';
 import { conReintento, type EstadoReserva } from './service';
+
+// Motivo de cancelacion: limite de VARCHAR(255) de RESERVA, validado en el
+// servicio (convencion de esquemaCrear) para responder 400 y nunca 1406/500.
+const esquemaMotivo = z
+  .string()
+  .trim()
+  .max(255, 'El motivo no puede superar 255 caracteres');
 
 type FilaReservaCancelable = {
   id: string;
@@ -101,6 +109,15 @@ export async function cancelarReserva(
   reservaId: string,
   motivo?: string,
 ): Promise<void> {
+  let motivoLimpio: string | null = null;
+  if (typeof motivo === 'string' && motivo.trim() !== '') {
+    const resultado = esquemaMotivo.safeParse(motivo);
+    if (!resultado.success) {
+      throw new ValidationError(resultado.error.issues[0].message);
+    }
+    motivoLimpio = resultado.data;
+  }
+
   const reserva = await leerReserva(String(reservaId));
 
   let canceladaPor: 'RESIDENTE' | 'ADMINISTRADOR';
@@ -119,8 +136,6 @@ export async function cancelarReserva(
   if (reserva.estado === 'VENCIDA') {
     throw new ConflictError('La reserva ya vencio y no se puede cancelar');
   }
-
-  const motivoLimpio = typeof motivo === 'string' && motivo.trim() !== '' ? motivo.trim() : null;
 
   await conReintento((conn) =>
     transaccionCancelacion(conn, reserva, usuario.id, canceladaPor, motivoLimpio),
