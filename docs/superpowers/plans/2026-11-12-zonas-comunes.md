@@ -441,7 +441,7 @@ git commit -m "feat: recuperacion de contrasena por token"
   - `registrarAuditoria(conn: PoolConnection, entrada: { usuarioId: string; accion: string; entidad: string; entidadId: string; detalle?: unknown }): Promise<void>`
 - Rutas: `GET /admin/zonas`, `GET/POST /admin/zonas/nueva`, `GET/POST /admin/zonas/:id`.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('rechaza cierre que no es multiplo de la duracion', async () => { /* 400 */ });
@@ -450,19 +450,19 @@ it('desactivar zona no borra sus reservas', async () => { /* activa=0, RESERVA i
 it('cambiar la duracion del bloque no reescribe reservas existentes', async () => { /* RESERVA.hora_fin conserva el valor original */ });
 ```
 
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/zonas.test.ts`
 Expected: FAIL — no existe `src/modules/zonas`.
 
-- [ ] **Step 3: Implementar** `src/modules/zonas/*` con `requireRole('ADMINISTRADOR')`; los horarios se guardan en `HORARIO_ZONA` dentro de la misma transacción de la zona y cada cambio llama a `registrarAuditoria`.
+- [x] **Step 3: Implementar** `src/modules/zonas/*` con `requireRole('ADMINISTRADOR')`; los horarios se guardan en `HORARIO_ZONA` dentro de la misma transacción de la zona y cada cambio llama a `registrarAuditoria`.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/zonas.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/zonas src/modules/auditoria src/views/admin tests/zonas.test.ts
