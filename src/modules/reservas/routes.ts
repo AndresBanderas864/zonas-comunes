@@ -1,9 +1,15 @@
 import { Router } from 'express';
 import { ConflictError, ValidationError } from '../../lib/errors';
 import { requireRole } from '../../middleware/require-role';
-import { crearReserva, type CrearReservaInput } from './service';
+import { crearReserva, type CrearReservaInput, type EstadoReserva } from './service';
 import { cancelarReserva } from './cancelacion';
-import { listarReservasNoCanceladas } from './repository';
+import {
+  dividirHistorial,
+  historialDe,
+  listarReservas,
+  listarZonasParaFiltro,
+  type FiltrosReservas,
+} from './consultas';
 
 export const reservasRoutes = Router();
 
@@ -73,10 +79,45 @@ reservasRoutes.post('/', requireRole('RESIDENTE'), async (req, res) => {
 export const misReservasRoutes = Router();
 
 misReservasRoutes.get('/', requireRole('RESIDENTE', 'ADMINISTRADOR'), async (req, res) => {
-  const reservas = req.usuario!.apartamentoId
-    ? await listarReservasNoCanceladas(req.usuario!.apartamentoId)
+  const historial = req.usuario!.apartamentoId
+    ? await historialDe(req.usuario!.apartamentoId)
     : [];
-  res.render('reservas/mis-reservas', { titulo: 'Mis reservas', reservas });
+  const { proximas, pasadas } = dividirHistorial(historial);
+  res.render('reservas/historial', { titulo: 'Mis reservas', proximas, pasadas });
+});
+
+export const adminReservasRoutes = Router();
+
+const ESTADOS_VALIDOS: EstadoReserva[] = ['CONFIRMADA', 'CANCELADA', 'VENCIDA'];
+
+function textoConsulta(valor: unknown): string | undefined {
+  return typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : undefined;
+}
+
+adminReservasRoutes.get('/reservas', requireRole('ADMINISTRADOR'), async (req, res) => {
+  const estado = textoConsulta(req.query.estado);
+  if (estado && !ESTADOS_VALIDOS.includes(estado as EstadoReserva)) {
+    throw new ValidationError('El estado indicado no es valido');
+  }
+
+  const filtros: FiltrosReservas = {
+    desde: textoConsulta(req.query.desde),
+    hasta: textoConsulta(req.query.hasta),
+    zonaId: textoConsulta(req.query.zonaId),
+    estado: estado as EstadoReserva | undefined,
+  };
+
+  const [reservas, zonas] = await Promise.all([
+    listarReservas(filtros),
+    listarZonasParaFiltro(),
+  ]);
+
+  res.render('admin/reservas', {
+    titulo: 'Supervisión de reservas',
+    reservas,
+    zonas,
+    filtros,
+  });
 });
 
 reservasRoutes.post(

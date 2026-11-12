@@ -1,0 +1,84 @@
+<section>
+  <h1>Supervisión de reservas</h1>
+
+  <form method="get" action="/admin/reservas" class="filtros">
+    <div>
+      <label for="desde">Desde</label>
+      <input id="desde" name="desde" type="date" value="<%= filtros.desde || '' %>" />
+    </div>
+    <div>
+      <label for="hasta">Hasta</label>
+      <input id="hasta" name="hasta" type="date" value="<%= filtros.hasta || '' %>" />
+    </div>
+    <div>
+      <label for="zonaId">Zona</label>
+      <select id="zonaId" name="zonaId">
+        <option value="">Todas</option>
+        <% for (const zona of zonas) { %>
+        <option value="<%= zona.id %>" <%= filtros.zonaId === zona.id ? 'selected' : '' %>>
+          <%= zona.nombre %>
+        </option>
+        <% } %>
+      </select>
+    </div>
+    <div>
+      <label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="">Todos</option>
+        <% const ESTADOS = [['CONFIRMADA', 'Confirmada'], ['CANCELADA', 'Cancelada'], ['VENCIDA', 'Vencida']]; %>
+        <% for (const [valor, etiqueta] of ESTADOS) { %>
+        <option value="<%= valor %>" <%= filtros.estado === valor ? 'selected' : '' %>>
+          <%= etiqueta %>
+        </option>
+        <% } %>
+      </select>
+    </div>
+    <button type="submit">Filtrar</button>
+  </form>
+
+  <% if (!reservas || reservas.length === 0) { %>
+  <p>No hay reservas con esos filtros.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Apartamento</th>
+        <th scope="col">Zona</th>
+        <th scope="col">Fecha</th>
+        <th scope="col">Bloque</th>
+        <th scope="col">Cupos</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% const ESTADOS_FILA = { CONFIRMADA: 'Confirmada', CANCELADA: 'Cancelada', VENCIDA: 'Vencida' }; %>
+      <% for (const reserva of reservas) { %>
+      <tr>
+        <th scope="row"><%= reserva.torreInterior %> · <%= reserva.numero %></th>
+        <td><%= reserva.zonaNombre %></td>
+        <td><%= reserva.fecha %></td>
+        <td><%= reserva.horaInicio %> – <%= reserva.horaFin %></td>
+        <td><%= reserva.cupos %></td>
+        <td><%= ESTADOS_FILA[reserva.estado] || reserva.estado %></td>
+        <td>
+          <% if (reserva.estado === 'CONFIRMADA') { %>
+          <form method="post" action="/reservas/<%= reserva.id %>/cancelar">
+            <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <% } %>
+            <label for="motivo-<%= reserva.id %>">Motivo</label>
+            <input id="motivo-<%= reserva.id %>" name="motivo" type="text" maxlength="255"
+              placeholder="Motivo (opcional)" />
+            <button type="submit">Cancelar</button>
+          </form>
+          <% } else { %>
+          <span>—</span>
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
