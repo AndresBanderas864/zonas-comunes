@@ -1,6 +1,6 @@
 # Sistema de horarios para zonas comunes — Plan de implementación
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Entregar un monolito web funcional donde los residentes reservan bloques de zonas comunes con cupos limitados por aforo, sin sobreventa bajo concurrencia, con administración, vigilancia y estadísticas.
 
@@ -46,7 +46,7 @@ Cinco fallos que la spec implica pero que ningún requisito enumera. Cada uno ti
 **Interfaces:**
 - Produces: `createApp(): Express` en `src/app.ts`; `GET /health` → `200 {"status":"ok","db":"up"}`.
 
-- [ ] **Step 1: Escribir el test que falla**
+- [x] **Step 1: Escribir el test que falla**
 
 ```ts
 // tests/health.test.ts
@@ -63,22 +63,22 @@ describe('GET /health', () => {
 });
 ```
 
-- [ ] **Step 2: Ejecutarlo y verlo fallar**
+- [x] **Step 2: Ejecutarlo y verlo fallar**
 
 Run: `npx vitest run tests/health.test.ts`
 Expected: FAIL — no existe `src/app`.
 
-- [ ] **Step 3: Crear el esqueleto**
+- [x] **Step 3: Crear el esqueleto**
 
 `package.json` con `"type": "module"`, scripts `dev` (`tsx watch src/server.ts`), `test` (`vitest run`), `migrate`, `seed`, `build`. `docker-compose.yml` con `mariadb:11`, base `ecc`, usuario/clave `ecc`/`ecc`, `MARIADB_ROOT_PASSWORD=root`, healthcheck `mariadb-admin ping`, y servicio `app` que espera a la base. `.env.example` con `DATABASE_URL=mysql://ecc:ecc@localhost:3306/ecc`, `SESSION_SECRET`, `PORT=3000`, `TZ=America/Bogota`. `.gitignore` excluye `node_modules`, `dist`, `.env`, `coverage`. `vitest.config.ts` calcula `TEST_DB_NAME = 'ecc_test_' + process.pid`, asigna `process.env.TEST_DB_NAME = TEST_DB_NAME` y fija `test: { fileParallelism: false, globalSetup: ['tests/global-setup.ts'], setupFiles: ['tests/setup.ts'], env: { NODE_ENV: 'test', SESSION_SECRET: 'test-secret-con-mas-de-32-caracteres', DATABASE_URL: 'mysql://root:root@localhost:3306/' + TEST_DB_NAME, TEST_DB_NAME } }` (root solo para crear/destruir la base de prueba).
 Implementar `src/app.ts` exportando `createApp()` con `express.json()`, `express.urlencoded({extended:true})`, y `GET /health` que ejecuta `SELECT 1` con el pool y responde el JSON del test.
 
-- [ ] **Step 4: Verificar que pasa**
+- [x] **Step 4: Verificar que pasa**
 
 Run: `docker compose up -d mariadb && npx vitest run tests/health.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add package.json tsconfig.json vitest.config.ts .gitignore .env.example docker-compose.yml src tests
@@ -103,7 +103,7 @@ git commit -m "chore: esqueleto del proyecto y healthcheck"
   - `tests/setup.ts`: `beforeEach(resetearBase)`.
   - Tablas del diseño §8 con sus `CHECK`, `UNIQUE`, `FK` e índices.
 
-- [ ] **Step 1: Escribir el test de esquema**
+- [x] **Step 1: Escribir el test de esquema**
 
 ```ts
 // tests/schema.test.ts — tras migrar una base vacía
@@ -124,21 +124,21 @@ it('crea las 17 tablas y las restricciones clave', async () => {
 });
 ```
 
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/schema.test.ts`
 Expected: FAIL — no existe `src/db/pool`.
 
-- [ ] **Step 3: Implementar pool y migraciones**
+- [x] **Step 3: Implementar pool y migraciones**
 
 `001_init.sql` con las 17 tablas del diseño §8.2, `PARAMETRO_RESERVA` con `CHECK (id = 1)`, `OCUPACION_BLOQUE` con PK `(zona_id, fecha, hora_inicio)` y `CHECK (cupos_ocupados >= 0)`, los 6 índices del §8.4, y `ON DELETE RESTRICT` en los hechos. Añadir `UNIQUE(usuario_id, texto_legal_id)` en `AUTORIZACION_DATOS` y `CHECK (rol <> 'RESIDENTE' OR apartamento_id IS NOT NULL)` en `USUARIO`. `runMigrations` crea la tabla `MIGRACIONES` (`nombre`, `aplicada_en`), aplica en orden los `.sql` no registrados dentro de una transacción por archivo, y es idempotente. `tests/helpers/db.ts` usa una conexión `mysql2` sin `database` para `CREATE DATABASE`/`DROP DATABASE` (el pool apunta a una base que aún no existe), y `resetearBase` hace `SET FOREIGN_KEY_CHECKS=0; TRUNCATE ...; SET FOREIGN_KEY_CHECKS=1`.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/schema.test.ts`
 Expected: PASS. Volver a correr: sigue PASS (idempotencia).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db tests/schema.test.ts tests/setup.ts tests/global-setup.ts tests/helpers
@@ -155,7 +155,7 @@ git commit -m "feat: pool, transacciones y esquema inicial"
 **Interfaces:**
 - Produces: `runSeed(conn: Pool | PoolConnection): Promise<void>`; datos: 3 torres × 4 apartamentos, 1 `ADMINISTRADOR`, 1 `VIGILANTE`, 8 `RESIDENTE` (contraseña `Demo1234!`), 5 zonas con horario lunes–domingo, `PARAMETRO_RESERVA` (semana 7 / día 3 / anticipación 7), 3 `TEXTO_LEGAL` v1.
 
-- [ ] **Step 1: Test de seed idempotente**
+- [x] **Step 1: Test de seed idempotente**
 
 ```ts
 it('siembra una vez y no duplica al repetir', async () => {
@@ -168,13 +168,13 @@ it('siembra una vez y no duplica al repetir', async () => {
 });
 ```
 
-- [ ] **Step 2: Verlo fallar.** Run: `npx vitest run tests/seed.test.ts` → FAIL.
+- [x] **Step 2: Verlo fallar.** Run: `npx vitest run tests/seed.test.ts` → FAIL.
 
-- [ ] **Step 3: Implementar** `runSeed` con `INSERT ... ON DUPLICATE KEY UPDATE` o comprobación previa por clave natural. Horarios: BBQ 10:00–22:00 con bloques de 240; PISCINA/GIMNASIO/CANCHA/JUEGOS 08:00–20:00 con bloques de 120. Todas las zonas con `max_cupos_reserva = 4` y `aforo` entre 8 y 20.
+- [x] **Step 3: Implementar** `runSeed` con `INSERT ... ON DUPLICATE KEY UPDATE` o comprobación previa por clave natural. Horarios: BBQ 10:00–22:00 con bloques de 240; PISCINA/GIMNASIO/CANCHA/JUEGOS 08:00–20:00 con bloques de 120. Todas las zonas con `max_cupos_reserva = 4` y `aforo` entre 8 y 20.
 
-- [ ] **Step 4: Verificar.** Run: `npx vitest run tests/seed.test.ts` → PASS.
+- [x] **Step 4: Verificar.** Run: `npx vitest run tests/seed.test.ts` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/db/seed.ts src/db/seed-cli.ts tests/seed.test.ts
@@ -198,7 +198,7 @@ git commit -m "feat: seed de demostracion"
   - `errorHandler(err, req, res, next)` — mapea `AppError` a `{ error: { code, message } }`; en producción no filtra stack
   - `derivarCsrf(sessionToken: string, secret: string): string` — HMAC-SHA256 en hex
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('rechaza un env sin DATABASE_URL', () => {
@@ -215,13 +215,13 @@ it('AppError 409 se serializa como conflicto', async () => {
 });
 ```
 
-- [ ] **Step 2: Verlo fallar.** Run: `npx vitest run tests/lib.test.ts` → FAIL.
+- [x] **Step 2: Verlo fallar.** Run: `npx vitest run tests/lib.test.ts` → FAIL.
 
-- [ ] **Step 3: Implementar** los cuatro archivos. La ruta `/_test/conflict` existe solo cuando `NODE_ENV === 'test'`.
+- [x] **Step 3: Implementar** los cuatro archivos. La ruta `/_test/conflict` existe solo cuando `NODE_ENV === 'test'`.
 
-- [ ] **Step 4: Verificar.** Run: `npx vitest run tests/lib.test.ts` → PASS.
+- [x] **Step 4: Verificar.** Run: `npx vitest run tests/lib.test.ts` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/config src/lib src/middleware/error.ts tests/lib.test.ts
@@ -239,7 +239,7 @@ git commit -m "feat: configuracion, errores y utilidades criptograficas"
 **Interfaces:**
 - Produces: `res.locals.usuario` (o `null`), `req.flash(tipo, mensaje)`, `res.render` con `layout`; nav que muestra solo enlaces permitidos por rol.
 
-- [ ] **Step 1: Test de render**
+- [x] **Step 1: Test de render**
 
 ```ts
 it('el layout no muestra /admin a un residente', async () => {
@@ -251,13 +251,13 @@ it('el layout no muestra /admin a un residente', async () => {
 });
 ```
 
-- [ ] **Step 2: Verlo fallar.** → FAIL.
+- [x] **Step 2: Verlo fallar.** → FAIL.
 
-- [ ] **Step 3: Implementar** layout con `<!doctype html>`, `lang="es"`, `meta viewport`, salto al contenido, CSS con variables, foco visible y contraste ≥ 4.5:1. Si `usuario && !usuario.correoVerificado`, el layout muestra un aviso persistente "Tu correo no está verificado"; el enlace de verificación se escribe en el log hasta que Task 6 lo implemente. La ruta `/_test/layout` solo existe con `NODE_ENV === 'test'` y sirve para probar el render sin depender del login (que llega en Task 7). HTMX por CDN local en `src/public/htmx.min.js` (descargado una vez, no en runtime).
+- [x] **Step 3: Implementar** layout con `<!doctype html>`, `lang="es"`, `meta viewport`, salto al contenido, CSS con variables, foco visible y contraste ≥ 4.5:1. Si `usuario && !usuario.correoVerificado`, el layout muestra un aviso persistente "Tu correo no está verificado"; el enlace de verificación se escribe en el log hasta que Task 6 lo implemente. La ruta `/_test/layout` solo existe con `NODE_ENV === 'test'` y sirve para probar el render sin depender del login (que llega en Task 7). HTMX por CDN local en `src/public/htmx.min.js` (descargado una vez, no en runtime).
 
-- [ ] **Step 4: Verificar.** → PASS.
+- [x] **Step 4: Verificar.** → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/views src/public src/middleware/flash.ts tests/ui.test.ts
@@ -277,7 +277,7 @@ git commit -m "feat: layout base y navegacion por rol"
 - `verificarCorreo(token: string): Promise<void>` — marca `correo_verificado = 1` y el token como usado; idempotente mientras no esté vencido.
 - Rutas: `GET /registro/:token`, `POST /registro/:token`, `GET /verificar/:token`.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('registra con invitación vigente y la marca usada', async () => { /* 302 a /login, USUARIO ACTIVA, INVITACION USADA */ });
@@ -292,13 +292,13 @@ it('el registro crea TOKEN_VERIFICACION y GET /verificar/:token marca el correo'
 
 Los tests insertan la `INVITACION` directamente con SQL y un `token_hash` conocido; la UI de invitaciones llega en Task 10b.
 
-- [ ] **Step 2: Verlo fallar.** → FAIL.
+- [x] **Step 2: Verlo fallar.** → FAIL.
 
-- [ ] **Step 3: Implementar** servicio y rutas con `zod` (`nombre` 2–120, `correo` email, `password` ≥ 8). Mensajes de error en español. El registro con invitación sí puede decir que el correo ya está en uso: la invitación prueba que el alta es legítima.
+- [x] **Step 3: Implementar** servicio y rutas con `zod` (`nombre` 2–120, `correo` email, `password` ≥ 8). Mensajes de error en español. El registro con invitación sí puede decir que el correo ya está en uso: la invitación prueba que el alta es legítima.
 
-- [ ] **Step 4: Verificar.** → PASS.
+- [x] **Step 4: Verificar.** → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/auth tests/auth-registro.test.ts
@@ -321,7 +321,7 @@ git commit -m "feat: registro con invitacion de un solo uso"
   - `UsuarioSesion = { id: string; rol: Rol; apartamentoId: string | null; nombre: string; correo: string; correoVerificado: boolean }`
 - Cookie `sid`: `httpOnly`, `SameSite=Lax`, `Secure` si `NODE_ENV === 'production'`, `maxAge` 30 días.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('login correcto crea SESION y cookie httpOnly', async () => { /* 302, Set-Cookie contiene HttpOnly */ });
@@ -331,13 +331,13 @@ it('logout revoca la sesion y la cookie ya no sirve', async () => { /* 302 y GET
 it('una sesion con mas de 30 dias sin uso no vale', async () => { /* ultimo_uso hace 31 dias -> 302 /login */ });
 ```
 
-- [ ] **Step 2: Verlo fallar.** → FAIL.
+- [x] **Step 2: Verlo fallar.** → FAIL.
 
-- [ ] **Step 3: Implementar** con `argon2.verify`, `intentos_fallidos` + `bloqueado_hasta`, y comparación de tiempo constante. Actualizar `ultimo_uso` solo si `TIMESTAMPDIFF(MINUTE, ultimo_uso, UTC_TIMESTAMP()) >= 60`.
+- [x] **Step 3: Implementar** con `argon2.verify`, `intentos_fallidos` + `bloqueado_hasta`, y comparación de tiempo constante. Actualizar `ultimo_uso` solo si `TIMESTAMPDIFF(MINUTE, ultimo_uso, UTC_TIMESTAMP()) >= 60`.
 
-- [ ] **Step 4: Verificar.** → PASS.
+- [x] **Step 4: Verificar.** → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/auth tests/auth-login.test.ts
@@ -356,7 +356,7 @@ git commit -m "feat: login, logout y sesiones persistentes"
 - Produces: `requireAuth`, `requireRole(...roles: Rol[])`, `attachUsuario` (lee cookie `sid`, pone `res.locals.usuario`), `csrfProtection` (inyecta `res.locals.csrfToken = derivarCsrf(token, SESSION_SECRET)` y valida el campo `_csrf` en todo `POST`).
 - `GET /` redirige según rol: `RESIDENTE` → `/reservar`, `ADMINISTRADOR` → `/admin/zonas`, `VIGILANTE` → `/vigilancia`.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('sin sesion, GET / devuelve 302 a /login', async () => {});
@@ -373,13 +373,13 @@ it('con sesion revocada a mitad de un POST responde 401 y redirige a /login', as
 });
 ```
 
-- [ ] **Step 2: Verlo fallar.** → FAIL.
+- [x] **Step 2: Verlo fallar.** → FAIL.
 
-- [ ] **Step 3: Implementar** CSRF como `derivarCsrf(token_de_sesión, SESSION_SECRET)` comparado en tiempo constante contra el campo `_csrf`. Excluir `GET/HEAD/OPTIONS` y las rutas públicas de login/registro/recuperación. Para peticiones de navegador sin sesión, `requireAuth` responde 302 a `/login`; para peticiones `Accept: application/json`, 401.
+- [x] **Step 3: Implementar** CSRF como `derivarCsrf(token_de_sesión, SESSION_SECRET)` comparado en tiempo constante contra el campo `_csrf`. Excluir `GET/HEAD/OPTIONS` y las rutas públicas de login/registro/recuperación. Para peticiones de navegador sin sesión, `requireAuth` responde 302 a `/login`; para peticiones `Accept: application/json`, 401.
 
-- [ ] **Step 4: Verificar.** → PASS.
+- [x] **Step 4: Verificar.** → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/middleware tests/middleware.test.ts
