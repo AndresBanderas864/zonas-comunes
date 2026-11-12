@@ -22,6 +22,7 @@ import { reservasRoutes, misReservasRoutes, adminReservasRoutes } from './module
 import { adminEstadisticasRoutes } from './modules/estadisticas/routes';
 import { notificacionesRoutes } from './modules/notificaciones/routes';
 import { datosPersonalesRoutes } from './modules/datos-personales/routes';
+import { legalRoutes } from './modules/datos-personales/legal-routes';
 import { vigilanciaRoutes } from './modules/reservas/vigilancia';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -53,6 +54,9 @@ export function createApp() {
 
   app.use(loginRoutes);
   app.use(authRoutes);
+  // RF-39: textos legales publicos, registrados antes de cualquier guard de
+  // sesion y sin requireAuth propio.
+  app.use(legalRoutes);
 
   app.use('/reservas', requireAuth);
   app.use('/reservas', reservasRoutes);

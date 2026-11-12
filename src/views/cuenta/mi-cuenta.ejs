@@ -29,7 +29,7 @@
   <% if (politica) { %>
   <p>Versión <%= politica.version %>, vigente desde
     <%= politica.vigenteDesde.slice(0, 10) %>.</p>
-  <p><%= politica.contenido %></p>
+  <%- include('../partials/_texto-legal-parrafos', { contenido: politica.contenido }) %>
   <% if (aceptada) { %>
   <p>Ya aceptaste esta versión de la política.</p>
   <% } else { %>

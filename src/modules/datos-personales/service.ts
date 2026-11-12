@@ -89,7 +89,15 @@ export async function aceptarPolitica(
   });
 }
 
-export async function politicaVigente(): Promise<TextoLegal> {
+const NOMBRE_TEXTO: Record<TextoLegal['tipo'], string> = {
+  AUTORIZACION: 'una autorización de tratamiento de datos',
+  POLITICA: 'una política de datos',
+  AVISO_PRIVACIDAD: 'un aviso de privacidad',
+};
+
+export async function textoVigente(
+  tipo: TextoLegal['tipo'],
+): Promise<TextoLegal> {
   const filas = await query<TextoLegalFila>(
     // vigente_desde se lee como cadena UTC ('...Z') via DATE_FORMAT para que
     // la comparacion no dependa de la zona horaria del proceso Node; la
@@ -97,14 +105,15 @@ export async function politicaVigente(): Promise<TextoLegal> {
     `SELECT id, tipo, version, contenido,
             CONCAT(DATE_FORMAT(vigente_desde, '%Y-%m-%dT%H:%i:%s.%f'), 'Z') AS vigente_desde
      FROM TEXTO_LEGAL
-     WHERE tipo = 'POLITICA' AND vigente_desde <= UTC_TIMESTAMP(3)
+     WHERE tipo = ? AND vigente_desde <= UTC_TIMESTAMP(3)
      ORDER BY version DESC
      LIMIT 1`,
+    [tipo],
   );
 
   const fila = filas[0];
   if (!fila) {
-    throw new NotFoundError('No hay una política de datos vigente');
+    throw new NotFoundError(`No hay ${NOMBRE_TEXTO[tipo]} vigente`);
   }
 
   return {
@@ -114,6 +123,10 @@ export async function politicaVigente(): Promise<TextoLegal> {
     contenido: fila.contenido,
     vigenteDesde: fila.vigente_desde,
   };
+}
+
+export async function politicaVigente(): Promise<TextoLegal> {
+  return textoVigente('POLITICA');
 }
 
 export async function politicaAceptada(

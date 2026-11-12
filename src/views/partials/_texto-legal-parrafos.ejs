@@ -1,0 +1,2 @@
+<% for (const parrafo of contenido.split('\n\n')) { %><p><% const lineas = parrafo.split('\n'); for (let i = 0; i < lineas.length; i++) { %><%= lineas[i] %><% if (i < lineas.length - 1) { %><br /><% } } %></p>
+<% } %>
