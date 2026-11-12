@@ -42,3 +42,49 @@ export async function listarZonasActivas(): Promise<ZonaActiva[]> {
   );
   return filas.map(aZonaActiva);
 }
+
+export type ReservaEnLista = {
+  id: string;
+  zonaNombre: string;
+  fecha: string;
+  horaInicio: string;
+  horaFin: string;
+  cupos: number;
+  estado: string;
+};
+
+type ReservaListaFila = {
+  id: string;
+  zona_nombre: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  cupos: number;
+  estado: string;
+};
+
+export async function listarReservasNoCanceladas(
+  apartamentoId: string,
+): Promise<ReservaEnLista[]> {
+  const filas = await query<ReservaListaFila>(
+    `SELECT r.id, z.nombre AS zona_nombre,
+            DATE_FORMAT(r.fecha, '%Y-%m-%d') AS fecha,
+            TIME_FORMAT(r.hora_inicio, '%H:%i') AS hora_inicio,
+            TIME_FORMAT(r.hora_fin, '%H:%i') AS hora_fin,
+            r.cupos, r.estado
+     FROM RESERVA r
+     JOIN ZONA z ON z.id = r.zona_id
+     WHERE r.apartamento_id = ? AND r.estado <> 'CANCELADA'
+     ORDER BY r.fecha, r.hora_inicio`,
+    [apartamentoId],
+  );
+  return filas.map((fila) => ({
+    id: fila.id,
+    zonaNombre: fila.zona_nombre,
+    fecha: fila.fecha,
+    horaInicio: fila.hora_inicio,
+    horaFin: fila.hora_fin,
+    cupos: Number(fila.cupos),
+    estado: fila.estado,
+  }));
+}

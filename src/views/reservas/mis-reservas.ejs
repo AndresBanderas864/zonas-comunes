@@ -1,0 +1,45 @@
+<section>
+  <h1>Mis reservas</h1>
+  <% if (!reservas || reservas.length === 0) { %>
+  <p>No tienes reservas activas.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Zona</th>
+        <th scope="col">Fecha</th>
+        <th scope="col">Bloque</th>
+        <th scope="col">Cupos</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const reserva of reservas) { %>
+      <tr>
+        <th scope="row"><%= reserva.zonaNombre %></th>
+        <td><%= reserva.fecha %></td>
+        <td><%= reserva.horaInicio %> – <%= reserva.horaFin %></td>
+        <td><%= reserva.cupos %></td>
+        <td><%= reserva.estado === 'CONFIRMADA' ? 'Confirmada' : 'Vencida' %></td>
+        <td>
+          <% if (reserva.estado === 'CONFIRMADA') { %>
+          <form method="post" action="/reservas/<%= reserva.id %>/cancelar">
+            <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <% } %>
+            <label for="motivo-<%= reserva.id %>">Motivo</label>
+            <input id="motivo-<%= reserva.id %>" name="motivo" type="text" maxlength="255"
+              placeholder="Motivo (opcional)" />
+            <button type="submit">Cancelar reserva</button>
+          </form>
+          <% } else { %>
+          <span>Esta reserva ya venció.</span>
+          <% } %>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>

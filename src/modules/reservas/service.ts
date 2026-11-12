@@ -75,7 +75,7 @@ function esErrorReintentable(error: unknown): boolean {
   );
 }
 
-async function conReintento<T>(fn: (conn: PoolConnection) => Promise<T>): Promise<T> {
+export async function conReintento<T>(fn: (conn: PoolConnection) => Promise<T>): Promise<T> {
   try {
     return await withTransaction(fn);
   } catch (error) {
