@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import type { Rol } from './lib/types';
 import { pool } from './db/pool';
 import { ConflictError } from './lib/errors';
@@ -28,12 +30,70 @@ import { vigilanciaRoutes } from './modules/reservas/vigilancia';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// RNF-13: sin unsafe-inline. Las unicas fuentes de script/style del layout
+// son externas (/htmx.min.js y /styles.css servidos por express.static), asi
+// que 'self' basta. Se quita upgrade-insecure-requests porque el desarrollo
+// local corre en http plano; en produccion el TLS termina en el host.
+const helmetOpciones = {
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      'default-src': ["'self'"],
+      'script-src': ["'self'"],
+      'style-src': ["'self'"],
+      'img-src': ["'self'", 'data:'],
+      'font-src': ["'self'", 'data:'],
+      'upgrade-insecure-requests': null,
+    },
+  },
+};
+
+// RNF-08: 10 intentos de login por IP y ventana de 15 minutos; 5 peticiones
+// de recuperacion por IP en la misma ventana. Los limitters se construyen
+// DENTRO de createApp: cada instancia de aplicacion (cada test supertest con
+// request(createApp())) tiene su propio MemoryStore, y las pruebas que no
+// buscan el 429 no se contaminan entre si.
+function limiterLogin() {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        error: {
+          code: 'RATE_LIMIT',
+          message: 'Demasiados intentos de acceso. Espera 15 minutos.',
+        },
+      });
+    },
+  });
+}
+
+function limiterRecuperar() {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    handler: (_req, res) => {
+      res.status(429).json({
+        error: {
+          code: 'RATE_LIMIT',
+          message: 'Demasiadas solicitudes de recuperación. Espera 15 minutos.',
+        },
+      });
+    },
+  });
+}
+
 export function createApp() {
   const app = express();
 
   app.set('views', path.join(raizProyecto, 'src', 'views'));
   app.set('view engine', 'ejs');
 
+  app.use(helmet(helmetOpciones));
   app.use(express.static(path.join(raizProyecto, 'src', 'public')));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -41,6 +101,9 @@ export function createApp() {
   app.use(layoutRender);
   app.use(attachUsuario);
   app.use(csrfProtection);
+
+  app.post('/login', limiterLogin());
+  app.post('/recuperar', limiterRecuperar());
 
   app.get('/', redirigirInicio);
 

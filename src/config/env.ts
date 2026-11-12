@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 const esquema = z.object({
   DATABASE_URL: z.string().min(1),
-  SESSION_SECRET: z.string().min(1),
+  // RNF: el secreto firma y deriva tokens (CSRF); menos de 32 caracteres se
+  // rechaza en el arranque, no en el primer request.
+  SESSION_SECRET: z
+    .string()
+    .min(32, 'SESSION_SECRET debe tener al menos 32 caracteres'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   TEST_DATABASE_URL: z.string().min(1).optional(),

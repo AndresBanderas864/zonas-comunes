@@ -1,10 +1,14 @@
 import 'dotenv/config';
+// parseEnv corre en el arranque y lanza si la configuracion es invalida
+// (p. ej. SESSION_SECRET de menos de 32 caracteres): el proceso muere ahi.
+import { parseEnv } from './config/env';
 import { createApp } from './app';
 import { pool } from './db/pool';
 import { registrarJobs } from './jobs';
 import { iniciarDespachador } from './modules/notificaciones/dispatcher';
 
-const port = Number(process.env.PORT ?? 3000);
+const env = parseEnv(process.env);
+const port = env.PORT;
 const app = createApp();
 
 // Los jobs quedan fuera del camino de prueba: registrarJobs es no-op con
