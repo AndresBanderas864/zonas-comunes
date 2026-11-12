@@ -1,0 +1,31 @@
+import type { ResultSetHeader } from 'mysql2/promise';
+import { pool } from '../db/pool';
+
+// Sesiones y bitacora llevan marcas DATETIME(3) en UTC (NOW(3)/UTC_TIMESTAMP(3)
+// sobre un servidor MariaDB en UTC), asi que aqui la pared es UTC, no Bogota.
+function fechaHoraUtc(ahora: Date): string {
+  return `${ahora.toISOString().slice(0, 19).replace('T', ' ')}.${ahora.getMilliseconds()}`;
+}
+
+// Retencion de sesion: validarSesion acepta 30 dias de inactividad; el job
+// borra a los 31 para que la fila muerta no sobreviva a su propio criterio.
+export async function limpiarSesionesExpiradas(
+  ahora: Date = new Date(),
+): Promise<number> {
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `DELETE FROM SESION WHERE ultimo_uso < DATE_SUB(?, INTERVAL 31 DAY)`,
+    [fechaHoraUtc(ahora)],
+  );
+  return resultado.affectedRows;
+}
+
+// Retencion BITACORA: 12 meses (diseno, tabla de indices/retencion).
+export async function limpiarBitacoraAntigua(
+  ahora: Date = new Date(),
+): Promise<number> {
+  const [resultado] = await pool.query<ResultSetHeader>(
+    `DELETE FROM BITACORA WHERE creada_en < DATE_SUB(?, INTERVAL 12 MONTH)`,
+    [fechaHoraUtc(ahora)],
+  );
+  return resultado.affectedRows;
+}
