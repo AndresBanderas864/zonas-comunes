@@ -977,20 +977,20 @@ git commit -m "feat: vista de bitacora de auditoria"
 **Interfaces:**
 - Produces: `helmet()` con CSP para HTMX local; `rateLimit` en `/login` (10 intentos / 15 min / IP); cookies `Secure` en producción; arranque que falla si `SESSION_SECRET` mide menos de 32 caracteres.
 
-- [ ] **Step 1: Tests** — cabeceras de `helmet` presentes; el intento 11 de login en 15 minutos devuelve 429; `SESSION_SECRET` corto impide arrancar.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** — cabeceras de `helmet` presentes; el intento 11 de login en 15 minutos devuelve 429; `SESSION_SECRET` corto impide arrancar.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/seguridad.test.ts`
 Expected: FAIL — faltan `helmet`, `express-rate-limit` y la validación de secreto.
 
-- [ ] **Step 3: Implementar** `helmet` con CSP que permita solo `self` y el HTMX local, `rateLimit` en `/login` y recuperación, cookies `Secure` en producción y `parseEnv` rechazando `SESSION_SECRET` de menos de 32 caracteres.
+- [x] **Step 3: Implementar** `helmet` con CSP que permita solo `self` y el HTMX local, `rateLimit` en `/login` y recuperación, cookies `Secure` en producción y `parseEnv` rechazando `SESSION_SECRET` de menos de 32 caracteres.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/seguridad.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src tests/seguridad.test.ts
