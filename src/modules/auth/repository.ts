@@ -157,6 +157,56 @@ export async function buscarTokenVerificacion(
   return (filas[0] as TokenVerificacionFila | undefined) ?? null;
 }
 
+export async function crearTokenRecuperacion(
+  conn: PoolConnection,
+  usuarioId: string,
+  tokenHash: string,
+  venceEn: Date,
+): Promise<void> {
+  await conn.query(
+    `INSERT INTO TOKEN_VERIFICACION (id, usuario_id, tipo, token_hash, vence_en)
+     VALUES (UUID(), ?, 'RESTABLECER_PASSWORD', ?, ?)`,
+    [usuarioId, tokenHash, venceEn],
+  );
+}
+
+export async function buscarTokenRecuperacion(
+  conn: PoolConnection,
+  tokenHash: string,
+): Promise<TokenVerificacionFila | null> {
+  const [filas] = await conn.query<RowDataPacket[]>(
+    `SELECT id, usuario_id, usado_en, vence_en
+     FROM TOKEN_VERIFICACION
+     WHERE token_hash = ? AND tipo = 'RESTABLECER_PASSWORD'
+     FOR UPDATE`,
+    [tokenHash],
+  );
+  return (filas[0] as TokenVerificacionFila | undefined) ?? null;
+}
+
+export async function actualizarPasswordUsuario(
+  conn: PoolConnection,
+  usuarioId: string,
+  passwordHash: string,
+): Promise<void> {
+  await conn.query(
+    `UPDATE USUARIO SET password_hash = ?, intentos_fallidos = 0, bloqueado_hasta = NULL
+     WHERE id = ?`,
+    [passwordHash, usuarioId],
+  );
+}
+
+export async function revocarSesionesDeUsuario(
+  conn: PoolConnection,
+  usuarioId: string,
+): Promise<void> {
+  await conn.query(
+    `UPDATE SESION SET revocada_en = NOW(3)
+     WHERE usuario_id = ? AND revocada_en IS NULL`,
+    [usuarioId],
+  );
+}
+
 export async function marcarCorreoVerificado(
   conn: PoolConnection,
   usuarioId: string,
