@@ -23,7 +23,15 @@ describe('wiring del despachador periodico', () => {
       }),
     );
 
-    const resultado = await despacharPasada();
+    // El despacho simulado escribe en el log: se silencia para no ensuciar
+    // la salida del test (el contenido del log se comprueba en el test 2).
+    const spy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    let resultado: { enviados: number; fallidos: number };
+    try {
+      resultado = await despacharPasada();
+    } finally {
+      spy.mockRestore();
+    }
     expect(resultado).toEqual({ enviados: 2, fallidos: 0 });
 
     const filas = await query<{ canal: string; estado: string; intentos: number }>(
