@@ -17,6 +17,7 @@ import { invitacionesRoutes } from './modules/invitaciones/routes';
 import { usuariosRoutes } from './modules/usuarios/routes';
 import { zonasRoutes } from './modules/zonas/routes';
 import { parametrosRoutes } from './modules/zonas/parametros';
+import { disponibilidadRoutes } from './modules/reservas/disponibilidad-routes';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -49,6 +50,8 @@ export function createApp() {
   app.use(authRoutes);
 
   app.use('/reservas', requireAuth);
+  app.use('/reservar', requireAuth);
+  app.use('/reservar', disponibilidadRoutes);
   app.use('/mis-reservas', requireAuth);
   app.use('/notificaciones', requireAuth);
   app.use('/mi-cuenta', requireAuth);

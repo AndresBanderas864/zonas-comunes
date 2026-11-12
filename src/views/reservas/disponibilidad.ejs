@@ -1,0 +1,29 @@
+<section>
+  <h1>Disponibilidad de <%= zona.nombre %></h1>
+  <p>Fecha: <%= fecha %></p>
+  <% if (!bloques || bloques.length === 0) { %>
+  <p>No hay bloques disponibles para este dia.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Bloque</th>
+        <th scope="col">Aforo</th>
+        <th scope="col">Cupos disponibles</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const bloque of bloques) { %>
+      <tr>
+        <th scope="row"><%= bloque.horaInicio %> - <%= bloque.horaFin %></th>
+        <td><%= bloque.aforo %></td>
+        <td><%= bloque.cuposDisponibles %></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+  <p>
+    <a href="/reservar">Cambiar zona o fecha</a>
+  </p>
+</section>

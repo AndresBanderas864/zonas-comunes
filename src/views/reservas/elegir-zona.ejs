@@ -1,0 +1,30 @@
+<section>
+  <h1>Elegir zona y fecha</h1>
+  <% if (!zonas || zonas.length === 0) { %>
+  <p>Aun no hay zonas disponibles para reservar.</p>
+  <% } else { %>
+  <form method="get" action="/reservar">
+    <p>
+      <label for="zona">Zona comun</label>
+      <select id="zona" name="zona" required>
+        <% for (const zona of zonas) { %>
+        <option value="<%= zona.id %>"><%= zona.nombre %></option>
+        <% } %>
+      </select>
+    </p>
+    <p>
+      <label for="fecha">Fecha</label>
+      <input type="date" id="fecha" name="fecha" required />
+    </p>
+    <p>
+      <button class="boton" type="submit">Ver disponibilidad</button>
+    </p>
+  </form>
+  <h2>Zonas activas</h2>
+  <ul>
+    <% for (const zona of zonas) { %>
+    <li><%= zona.nombre %></li>
+    <% } %>
+  </ul>
+  <% } %>
+</section>
