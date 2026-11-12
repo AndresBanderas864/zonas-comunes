@@ -175,7 +175,8 @@ DISPOSITIVO_PUSH(id PK, usuario_id FK, token_push, plataforma CHECK IN ('ANDROID
 TEXTO_LEGAL(id PK, tipo CHECK IN ('AUTORIZACION','POLITICA','AVISO_PRIVACIDAD'),
             version, contenido, vigente_desde, UNIQUE(tipo, version))
 
-AUTORIZACION_DATOS(id PK, usuario_id FK, texto_legal_id FK, aceptada_en, revocada_en)
+AUTORIZACION_DATOS(id PK, usuario_id FK, texto_legal_id FK, aceptada_en, revocada_en,
+                  UNIQUE(usuario_id, texto_legal_id))
 
 ZONA(id PK, nombre UNIQUE, aforo CHECK (aforo > 0), duracion_bloque_min,
      max_cupos_reserva, activa)
@@ -315,7 +316,8 @@ Un job cada 15 minutos marca `CONFIRMADA → VENCIDA` cuando `TIMESTAMP(fecha, h
 | Caso | Comportamiento |
 |---|---|
 | Dos reservas simultáneas del último cupo | Una confirma, la otra recibe 409. Probado con test de concurrencia. |
-| Cancelar dos veces | Segunda es no-op (0 filas afectadas). |
+| Doble submit del mismo apartamento en el mismo bloque | Una sola reserva no cancelada; la segunda recibe 409 y el contador no queda inflado. |
+| Cancelar dos veces | Segunda devuelve 409; no hay filas afectadas y el contador no cambia. |
 | Reserva en el pasado | Rechazada al validar `fecha`/`hora_inicio`. |
 | Franja fuera del horario de la zona | Rechazada contra `HORARIO_ZONA`. |
 | Bloque que no es múltiplo de la duración | Rechazado. |
@@ -496,6 +498,8 @@ Un revisor sin contexto leyó el documento y devolvió ocho preguntas. Ninguna r
 | 6 | ¿Cambio de correo? | **Fuera.** `/mi-cuenta` rectifica solo el nombre | RF-08 fuera de alcance; evita un hueco de verificación |
 | 7 | ¿CRUD de apartamentos? | **Sí**, `/admin/apartamentos` | RF-42; sin él no se puede invitar a un apartamento nuevo |
 | 8 | ¿Aforo histórico en estadísticas? | **Aforo vigente**, etiquetado como tal | No se añade snapshot; el dato absoluto sigue siendo fiel |
+| 9 | ¿Dos reservas del mismo apartamento en el mismo bloque? | **Prohibido**: una sola no cancelada; la segunda recibe 409 | Un doble clic no infla el contador ni duplica la reserva |
+| 10 | ¿Qué responde cancelar dos veces? | **409**, sin tocar el contador | El estado ya está resuelto; el error lo dice explícitamente |
 
 **Decisiones menores de implementación:** el token CSRF se deriva como `HMAC-SHA256(token_de_sesión, secreto_del_servidor)`, sin columna nueva en `SESION`; y cada corrida de pruebas crea y destruye su propia base `ecc_test_<aleatorio>` para no compartir estado.
 
