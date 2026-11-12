@@ -5,12 +5,20 @@ export type ApartamentoFila = {
   id: string;
   torre_interior: string;
   numero: string;
-  creado_en: Date;
+  // Cadena ISO UTC ('...Z'): creada_en se almacena en UTC_TIMESTAMP(3) y se
+  // formatea en SQL para que la lectura no dependa de la TZ del proceso Node
+  // (convencion identica a la de notificaciones y reservas).
+  creado_en: string;
 };
+
+// Lectura de creado_en con la convencion UTC explicita ('Z'), no como Date
+// interpretado en hora local del proceso.
+const COLUMNAS_APARTAMENTO = `id, torre_interior, numero,
+  CONCAT(DATE_FORMAT(creado_en, '%Y-%m-%dT%H:%i:%s.%f'), 'Z') AS creado_en`;
 
 export async function listarApartamentosFilas(): Promise<ApartamentoFila[]> {
   return query<ApartamentoFila>(
-    `SELECT id, torre_interior, numero, creado_en
+    `SELECT ${COLUMNAS_APARTAMENTO}
      FROM APARTAMENTO ORDER BY torre_interior, numero`,
   );
 }
@@ -20,7 +28,7 @@ export async function obtenerApartamentoFila(
   id: string,
 ): Promise<ApartamentoFila | null> {
   const [filas] = await conn.query<RowDataPacket[]>(
-    `SELECT id, torre_interior, numero, creado_en
+    `SELECT ${COLUMNAS_APARTAMENTO}
      FROM APARTAMENTO WHERE id = ? FOR UPDATE`,
     [id],
   );
@@ -31,8 +39,11 @@ export async function insertarApartamento(
   conn: PoolConnection,
   datos: { id: string; torreInterior: string; numero: string },
 ): Promise<void> {
+  // creado_en en UTC explicito (UTC_TIMESTAMP(3)) en lugar de depender del
+  // DEFAULT CURRENT_TIMESTAMP: el servidor tiene TZ=America/Bogota.
   await conn.query<ResultSetHeader>(
-    `INSERT INTO APARTAMENTO (id, torre_interior, numero) VALUES (?, ?, ?)`,
+    `INSERT INTO APARTAMENTO (id, torre_interior, numero, creado_en)
+     VALUES (?, ?, ?, UTC_TIMESTAMP(3))`,
     [datos.id, datos.torreInterior, datos.numero],
   );
 }

@@ -8,6 +8,10 @@ services:
       MARIADB_DATABASE: ecc
       MARIADB_USER: ecc
       MARIADB_PASSWORD: ecc
+      # Constraint global: TZ=America/Bogota en el contenedor. Por eso todas
+      # las marcas de sistema en codigo usan UTC_TIMESTAMP(3) explicito en
+      # lugar de NOW()/CURRENT_TIMESTAMP implicitos.
+      TZ: America/Bogota
     ports:
       - "3306:3306"
     volumes:

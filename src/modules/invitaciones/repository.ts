@@ -42,8 +42,11 @@ export async function insertarInvitacion(
   },
 ): Promise<void> {
   await conn.query<ResultSetHeader>(
-    `INSERT INTO INVITACION (id, apartamento_id, creada_por, token_hash, estado, vence_en)
-     VALUES (?, ?, ?, ?, 'VIGENTE', ?)`,
+    // creada_en en UTC explicito (UTC_TIMESTAMP(3)): el DEFAULT
+    // CURRENT_TIMESTAMP del servidor con TZ=America/Bogota daria hora local.
+    // vence_en viaja como Date de JS (par escritor/lector JS, coherente).
+    `INSERT INTO INVITACION (id, apartamento_id, creada_por, token_hash, estado, vence_en, creada_en)
+     VALUES (?, ?, ?, ?, 'VIGENTE', ?, UTC_TIMESTAMP(3))`,
     [
       datos.id,
       datos.apartamentoId,

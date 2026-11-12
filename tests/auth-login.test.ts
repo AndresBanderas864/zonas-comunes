@@ -123,9 +123,12 @@ describe('login y sesiones', () => {
   it('una sesion con mas de 30 dias sin uso no vale', async () => {
     const usuarioId = await sembrarUsuario();
     const token = 'token-sesion-vieja';
+    // El lector (validarSesion) compara ultimo_uso contra UTC_TIMESTAMP(3):
+    // el seed escribe en la misma convencion UTC, no NOW(3) (hora local de
+    // Bogota en el contenedor).
     await query(
       `INSERT INTO SESION (id, usuario_id, token_hash, ultimo_uso)
-       VALUES (?, ?, ?, DATE_SUB(NOW(3), INTERVAL 31 DAY))`,
+       VALUES (?, ?, ?, DATE_SUB(UTC_TIMESTAMP(3), INTERVAL 31 DAY))`,
       [randomUUID(), usuarioId, hashToken(token)],
     );
 

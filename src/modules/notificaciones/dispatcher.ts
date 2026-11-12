@@ -1,3 +1,4 @@
+import cron from 'node-cron';
 import { withTransaction } from '../../db/pool';
 import {
   registrarIntento,
@@ -93,3 +94,62 @@ export const despachadorConsola: CanalEnvio = {
     );
   },
 };
+
+// Espejo de despachadorConsola para el canal PUSH: simulacion que escribe
+// en el log con la etiqueta del canal. El adaptador real de push queda detras
+// de la interfaz CanalEnvio.
+export const despachadorConsolaPush: CanalEnvio = {
+  canal: 'PUSH',
+  async enviar(envio: Envio): Promise<void> {
+    console.info(
+      `[notificaciones] envio ${envio.id} (notificacion ${envio.notificacionId}) por ${envio.canal}, intento ${envio.intentos + 1} de ${MAX_INTENTOS}`,
+    );
+  },
+};
+
+const CANALES: readonly CanalEnvio[] = [despachadorConsola, despachadorConsolaPush];
+
+// Pasada completa sobre todos los canales. Es exactamente lo que ejecuta el
+// cron cada minuto; exportada para poder probarla sin esperar al cron.
+export async function despacharPasada(): Promise<{
+  enviados: number;
+  fallidos: number;
+}> {
+  let enviados = 0;
+  let fallidos = 0;
+  for (const canal of CANALES) {
+    const resultado = await despacharPendientes(canal, LIMITE_POR_PASADA);
+    enviados += resultado.enviados;
+    fallidos += resultado.fallidos;
+  }
+  return { enviados, fallidos };
+}
+
+// Un trabajo cron por canal, cada 1 minuto, con noOverlap (la pasada anterior
+// debe terminar antes de la siguiente). Devuelve el teardown que detiene las
+// tareas; no-op (null) bajo NODE_ENV=test: los tests invocan despacharPasada
+// o despacharPendientes directamente, nunca el cron.
+export function iniciarDespachador(): (() => void) | null {
+  if (process.env.NODE_ENV === 'test') return null;
+
+  const tareas = CANALES.map((canal) =>
+    cron.schedule(
+      '* * * * *',
+      () => {
+        despacharPendientes(canal, LIMITE_POR_PASADA).then(
+          (r) =>
+            console.info(
+              `[despachador] ${canal.canal}: ${r.enviados} enviados, ${r.fallidos} fallidos`,
+            ),
+          (error: unknown) =>
+            console.error(`[despachador] ${canal.canal} fallo`, error),
+        );
+      },
+      { noOverlap: true },
+    ),
+  );
+
+  return () => {
+    for (const tarea of tareas) tarea.stop();
+  };
+}

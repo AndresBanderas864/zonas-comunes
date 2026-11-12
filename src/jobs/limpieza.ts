@@ -1,10 +1,14 @@
 import type { ResultSetHeader } from 'mysql2/promise';
 import { pool } from '../db/pool';
 
-// Sesiones y bitacora llevan marcas DATETIME(3) en UTC (NOW(3)/UTC_TIMESTAMP(3)
-// sobre un servidor MariaDB en UTC), asi que aqui la pared es UTC, no Bogota.
+// Sesiones y bitacora llevan marcas DATETIME(3) en UTC escritas con
+// UTC_TIMESTAMP(3) explicito (el servidor ahora corre con TZ=America/Bogota,
+// asi que NOW() ya no es UTC), por lo que aqui la pared es UTC, no Bogota.
+// Los milisegundos van padding de 3 digitos: Date.getMilliseconds() los
+// devuelve sin ceros iniciales (5 -> '5' que MariaDB lee como 500 ms).
 function fechaHoraUtc(ahora: Date): string {
-  return `${ahora.toISOString().slice(0, 19).replace('T', ' ')}.${ahora.getMilliseconds()}`;
+  const ms = String(ahora.getMilliseconds()).padStart(3, '0');
+  return `${ahora.toISOString().slice(0, 19).replace('T', ' ')}.${ms}`;
 }
 
 // Retencion de sesion: validarSesion acepta 30 dias de inactividad; el job

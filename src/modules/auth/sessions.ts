@@ -14,7 +14,9 @@ export type UsuarioSesion = {
 
 type FilaSesion = {
   sesion_id: string;
-  ultimo_uso: Date;
+  // Cadena ISO UTC ('YYYY-MM-DDTHH:mm:ss.SSSZ') producida por DATE_FORMAT
+  // en la consulta de validarSesion (columna almacenada en UTC_TIMESTAMP(3)).
+  ultimo_uso: string;
   id: string;
   rol: Rol;
   apartamento_id: string | null;
@@ -29,8 +31,12 @@ export async function crearSesion(
   const token = generarToken();
   const sesionId = randomUUID();
 
+  // Marca de sistema en UTC explicito: el contenedor MariaDB corre con
+  // TZ=America/Bogota, asi que NOW()/DEFAULT CURRENT_TIMESTAMP darian hora
+  // local. Se fija ultimo_uso y creada_en aqui en vez de depender del DEFAULT.
   await query(
-    'INSERT INTO SESION (id, usuario_id, token_hash) VALUES (?, ?, ?)',
+    `INSERT INTO SESION (id, usuario_id, token_hash, ultimo_uso, creada_en)
+     VALUES (?, ?, ?, UTC_TIMESTAMP(3), UTC_TIMESTAMP(3))`,
     [sesionId, usuarioId, hashToken(token)],
   );
 
@@ -41,14 +47,19 @@ export async function validarSesion(
   token: string,
 ): Promise<UsuarioSesion | null> {
   const filas = await query<FilaSesion>(
-    `SELECT s.id AS sesion_id, s.ultimo_uso,
+    // ultimo_uso se lee como cadena UTC ('...Z') para que el calculo de
+    // minutos sin uso no dependa de la zona horaria del proceso Node: la
+    // columna se escribe en UTC_TIMESTAMP(3). La ventana de 30 dias se
+    // compara contra UTC_TIMESTAMP(3), no contra NOW(3) local de Bogota.
+    `SELECT s.id AS sesion_id,
+            CONCAT(DATE_FORMAT(s.ultimo_uso, '%Y-%m-%dT%H:%i:%s.%f'), 'Z') AS ultimo_uso,
             u.id, u.rol, u.apartamento_id, u.nombre, u.correo, u.correo_verificado
      FROM SESION s
      JOIN USUARIO u ON u.id = s.usuario_id
      WHERE s.token_hash = ?
        AND s.revocada_en IS NULL
        AND u.estado = 'ACTIVA'
-       AND s.ultimo_uso >= DATE_SUB(NOW(3), INTERVAL 30 DAY)`,
+       AND s.ultimo_uso >= DATE_SUB(UTC_TIMESTAMP(3), INTERVAL 30 DAY)`,
     [hashToken(token)],
   );
 
@@ -57,7 +68,8 @@ export async function validarSesion(
 
   const minutosSinUso = (Date.now() - new Date(fila.ultimo_uso).getTime()) / 60_000;
   if (minutosSinUso >= 60) {
-    await query('UPDATE SESION SET ultimo_uso = NOW(3) WHERE id = ?', [
+    // Marca de sistema en UTC (ver comentario del INSERT).
+    await query('UPDATE SESION SET ultimo_uso = UTC_TIMESTAMP(3) WHERE id = ?', [
       fila.sesion_id,
     ]);
   }
@@ -73,8 +85,9 @@ export async function validarSesion(
 }
 
 export async function revocarSesion(token: string): Promise<void> {
+  // Marca de sistema en UTC explicito (contenedor con TZ=America/Bogota).
   await query(
-    `UPDATE SESION SET revocada_en = NOW(3)
+    `UPDATE SESION SET revocada_en = UTC_TIMESTAMP(3)
      WHERE token_hash = ? AND revocada_en IS NULL`,
     [hashToken(token)],
   );

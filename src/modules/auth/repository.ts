@@ -88,9 +88,12 @@ export async function insertarUsuario(
   },
 ): Promise<void> {
   await conn.query(
+    // creado_en se fija en UTC explicito (UTC_TIMESTAMP(3)): el contenedor
+    // corre con TZ=America/Bogota y el DEFAULT CURRENT_TIMESTAMP(3) daria
+    // hora local. Marca de sistema, nunca comparada desde JS.
     `INSERT INTO USUARIO
-       (id, rol, apartamento_id, nombre, correo, password_hash, estado, correo_verificado)
-     VALUES (?, 'RESIDENTE', ?, ?, ?, ?, 'ACTIVA', 0)`,
+       (id, rol, apartamento_id, nombre, correo, password_hash, estado, correo_verificado, creado_en)
+     VALUES (?, 'RESIDENTE', ?, ?, ?, ?, 'ACTIVA', 0, UTC_TIMESTAMP(3))`,
     [datos.id, datos.apartamentoId, datos.nombre, datos.correo, datos.passwordHash],
   );
 }
@@ -101,7 +104,10 @@ export async function marcarInvitacionUsada(
   usuarioId: string,
 ): Promise<void> {
   await conn.query(
-    `UPDATE INVITACION SET estado = 'USADA', usada_en = NOW(3), usuario_id = ?
+    // usada_en: marca de sistema en UTC explicito (TZ=America/Bogota en el
+    // servidor haria que NOW(3) devolviera hora local). Nadie compara su
+    // valor desde JS; solo se registra.
+    `UPDATE INVITACION SET estado = 'USADA', usada_en = UTC_TIMESTAMP(3), usuario_id = ?
      WHERE id = ?`,
     [usuarioId, invitacionId],
   );
@@ -124,8 +130,10 @@ export async function crearAutorizacion(
   textoLegalId: string,
 ): Promise<void> {
   await conn.query(
+    // aceptada_en: marca de sistema en UTC explicito (NOW(3) daria hora
+    // local de Bogota en este servidor).
     `INSERT INTO AUTORIZACION_DATOS (id, usuario_id, texto_legal_id, aceptada_en)
-     VALUES (UUID(), ?, ?, NOW(3))`,
+     VALUES (UUID(), ?, ?, UTC_TIMESTAMP(3))`,
     [usuarioId, textoLegalId],
   );
 }
@@ -137,8 +145,11 @@ export async function crearTokenVerificacion(
   venceEn: Date,
 ): Promise<void> {
   await conn.query(
-    `INSERT INTO TOKEN_VERIFICACION (id, usuario_id, tipo, token_hash, vence_en)
-     VALUES (UUID(), ?, 'VERIFICAR_CORREO', ?, ?)`,
+    // creado_en en UTC explicito (no depender del DEFAULT CURRENT_TIMESTAMP:
+    // el servidor tiene TZ=America/Bogota). vence_en es hora UTC serializada
+    // desde un Date de JS por el llamante y se relee desde JS: pair coherente.
+    `INSERT INTO TOKEN_VERIFICACION (id, usuario_id, tipo, token_hash, vence_en, creado_en)
+     VALUES (UUID(), ?, 'VERIFICAR_CORREO', ?, ?, UTC_TIMESTAMP(3))`,
     [usuarioId, tokenHash, venceEn],
   );
 }
@@ -164,8 +175,9 @@ export async function crearTokenRecuperacion(
   venceEn: Date,
 ): Promise<void> {
   await conn.query(
-    `INSERT INTO TOKEN_VERIFICACION (id, usuario_id, tipo, token_hash, vence_en)
-     VALUES (UUID(), ?, 'RESTABLECER_PASSWORD', ?, ?)`,
+    // creado_en en UTC explicito (mismo criterio que crearTokenVerificacion).
+    `INSERT INTO TOKEN_VERIFICACION (id, usuario_id, tipo, token_hash, vence_en, creado_en)
+     VALUES (UUID(), ?, 'RESTABLECER_PASSWORD', ?, ?, UTC_TIMESTAMP(3))`,
     [usuarioId, tokenHash, venceEn],
   );
 }
@@ -175,7 +187,9 @@ export async function invalidarTokensRecuperacion(
   usuarioId: string,
 ): Promise<void> {
   await conn.query(
-    `UPDATE TOKEN_VERIFICACION SET usado_en = NOW(3)
+    // usado_en: marca de sistema en UTC explicito; los lectores solo miran
+    // IS NULL, nunca comparan el valor.
+    `UPDATE TOKEN_VERIFICACION SET usado_en = UTC_TIMESTAMP(3)
      WHERE usuario_id = ? AND tipo = 'RESTABLECER_PASSWORD' AND usado_en IS NULL`,
     [usuarioId],
   );
@@ -223,7 +237,8 @@ export async function revocarSesionesDeUsuario(
   usuarioId: string,
 ): Promise<void> {
   await conn.query(
-    `UPDATE SESION SET revocada_en = NOW(3)
+    // revocada_en: marca de sistema en UTC explicito (NOW(3) daria Bogota).
+    `UPDATE SESION SET revocada_en = UTC_TIMESTAMP(3)
      WHERE usuario_id = ? AND revocada_en IS NULL`,
     [usuarioId],
   );
@@ -242,7 +257,10 @@ export async function marcarTokenUsado(
   conn: PoolConnection,
   tokenId: string,
 ): Promise<void> {
-  await conn.query('UPDATE TOKEN_VERIFICACION SET usado_en = NOW(3) WHERE id = ?', [
-    tokenId,
-  ]);
+  // usado_en: marca de sistema en UTC explicito; los lectores solo miran
+  // IS NULL, nunca comparan el valor.
+  await conn.query(
+    'UPDATE TOKEN_VERIFICACION SET usado_en = UTC_TIMESTAMP(3) WHERE id = ?',
+    [tokenId],
+  );
 }

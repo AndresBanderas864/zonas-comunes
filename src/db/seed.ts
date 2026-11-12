@@ -116,8 +116,10 @@ export async function runSeed(conn: Conexion): Promise<void> {
 
   for (const texto of TEXTOS_LEGALES) {
     await conn.query(
+      // vigente_desde en UTC explicito: el contenedor MariaDB tiene
+      // TZ=America/Bogota y NOW(3) devolveria hora local.
       `INSERT INTO TEXTO_LEGAL (id, tipo, version, contenido, vigente_desde)
-       VALUES (?, ?, 1, ?, NOW(3))
+       VALUES (?, ?, 1, ?, UTC_TIMESTAMP(3))
        ON DUPLICATE KEY UPDATE contenido = VALUES(contenido)`,
       [randomUUID(), texto.tipo, texto.contenido],
     );

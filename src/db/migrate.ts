@@ -41,7 +41,12 @@ export async function runMigrations(conn: PoolConnection): Promise<number> {
       for (const sentencia of sentencias) {
         await conn.query(sentencia);
       }
-      await conn.query('INSERT INTO MIGRACIONES (nombre) VALUES (?)', [archivo]);
+      // aplicada_en en UTC explicito: no depender del DEFAULT
+      // CURRENT_TIMESTAMP(3) con el servidor en TZ=America/Bogota.
+      await conn.query(
+        'INSERT INTO MIGRACIONES (nombre, aplicada_en) VALUES (?, UTC_TIMESTAMP(3))',
+        [archivo],
+      );
       aplicadasAhora++;
     } catch (error) {
       throw new Error(`Fallo aplicando ${archivo}: ${(error as Error).message}`);
