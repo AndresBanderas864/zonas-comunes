@@ -96,10 +96,11 @@ function textoConsulta(valor: unknown): string | undefined {
 
 // Misma convencion de disponibilidad-routes: AAAA-MM-DD. Ademas se rechazan
 // fechas inexistentes (2026-13-45), que MariaDB convertiria en warning o
-// error 1292 dentro del WHERE.
+// error 1292 dentro del WHERE. Exportada para que estadisticas reutilice
+// la misma validacion de rango.
 const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
-function validarFecha(valor: string | undefined): string | undefined {
+export function validarFecha(valor: string | undefined): string | undefined {
   if (!valor) {
     return undefined;
   }

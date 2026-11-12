@@ -1,0 +1,107 @@
+<% const DIAS = ['','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']; %>
+<section>
+  <h1>Estadísticas</h1>
+
+  <form method="get" action="/admin/estadisticas" class="filtros">
+    <div>
+      <label for="desde">Desde</label>
+      <input id="desde" name="desde" type="date" value="<%= filtros.desde %>" />
+    </div>
+    <div>
+      <label for="hasta">Hasta</label>
+      <input id="hasta" name="hasta" type="date" value="<%= filtros.hasta %>" />
+    </div>
+    <div>
+      <label for="zonaId">Zona</label>
+      <select id="zonaId" name="zonaId">
+        <option value="">Todas</option>
+        <% for (const zona of zonas) { %>
+        <option value="<%= zona.id %>" <%= filtros.zonaId === zona.id ? 'selected' : '' %>>
+          <%= zona.nombre %>
+        </option>
+        <% } %>
+      </select>
+    </div>
+    <button type="submit">Filtrar</button>
+  </form>
+
+  <h2>Ocupación por bloque <small>(contra aforo actual)</small></h2>
+  <% if (ocupacion.length === 0) { %>
+  <p>No hay ocupación en el rango seleccionado.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Zona</th>
+        <th scope="col">Fecha</th>
+        <th scope="col">Bloque</th>
+        <th scope="col">Cupos ocupados</th>
+        <th scope="col">Aforo actual</th>
+        <th scope="col">% contra aforo actual</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const fila of ocupacion) { %>
+      <tr>
+        <th scope="row"><%= fila.zona %></th>
+        <td><%= fila.fecha %></td>
+        <td><%= fila.horaInicio %></td>
+        <td><%= fila.cupos %></td>
+        <td><%= fila.aforo %></td>
+        <td><%= fila.porcentajeAforo %>%</td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+
+  <h2>Horas pico</h2>
+  <% if (picos.length === 0) { %>
+  <p>No hay reservas en el rango seleccionado.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Día de la semana</th>
+        <th scope="col">Hora</th>
+        <th scope="col">Reservas</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const fila of picos) { %>
+      <tr>
+        <th scope="row"><%= DIAS[fila.diaSemana] %></th>
+        <td><%= String(fila.hora).padStart(2, '0') %>:00</td>
+        <td><%= fila.reservas %></td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+
+  <h2>Cancelaciones por zona</h2>
+  <% if (cancelaciones.length === 0) { %>
+  <p>No hay reservas en el rango seleccionado.</p>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Zona</th>
+        <th scope="col">Reservas en uso (confirmadas + vencidas)</th>
+        <th scope="col">Canceladas</th>
+        <th scope="col">% de cancelación</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const fila of cancelaciones) { %>
+      <tr>
+        <th scope="row"><%= fila.zona %></th>
+        <td><%= fila.confirmadas %></td>
+        <td><%= fila.canceladas %></td>
+        <td><%= fila.porcentaje %>%</td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
