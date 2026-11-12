@@ -749,20 +749,20 @@ git commit -m "feat: cancelacion con devolucion de cupos"
 **Interfaces:**
 - Produces: `historialDe(apartamentoId: string): Promise<Reserva[]>` (orden descendente por fecha y hora), `listarReservas(filtros: { desde?: string; hasta?: string; zonaId?: string; estado?: EstadoReserva }): Promise<ReservaConApartamento[]>` con `type ReservaConApartamento = Reserva & { torreInterior: string; numero: string; zonaNombre: string }`.
 
-- [ ] **Step 1: Tests** — el historial solo muestra reservas del propio apartamento (200 y el HTML no contiene la reserva de otro); el admin ve todas y el filtro por zona y estado reduce la lista; un residente recibe 403 en `/admin/reservas`.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** — el historial solo muestra reservas del propio apartamento (200 y el HTML no contiene la reserva de otro); el admin ve todas y el filtro por zona y estado reduce la lista; un residente recibe 403 en `/admin/reservas`.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/consultas.test.ts`
 Expected: FAIL — no existe `src/modules/reservas/consultas.ts`.
 
-- [ ] **Step 3: Implementar** `historialDe` y `listarReservas` con SQL parametrizado y las vistas `historial.ejs` y `admin/reservas.ejs`.
+- [x] **Step 3: Implementar** `historialDe` y `listarReservas` con SQL parametrizado y las vistas `historial.ejs` y `admin/reservas.ejs`.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/consultas.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/reservas src/views tests/consultas.test.ts
