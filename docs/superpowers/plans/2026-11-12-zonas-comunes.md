@@ -946,20 +946,20 @@ git commit -m "feat: mi cuenta y aceptacion de politica de datos"
 **Interfaces:**
 - Produces: `type Auditoria = { id: string; usuario: string; accion: string; entidad: string; entidadId: string; detalle: unknown; creadaEn: string }`; `listarAuditoria(filtros: { desde?: string; hasta?: string }): Promise<Auditoria[]>`; `registrarAuditoria` se llama desde zonas, parámetros, invitaciones, cancelación administrativa, desactivación de cuentas y mi cuenta.
 
-- [ ] **Step 1: Test** — solo `ADMINISTRADOR`; las acciones de las tareas 10, 10b, 11, 14 y 20 aparecen; el `detalle` nunca contiene `password_hash` ni tokens.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Test** — solo `ADMINISTRADOR`; las acciones de las tareas 10, 10b, 11, 14 y 20 aparecen; el `detalle` nunca contiene `password_hash` ni tokens.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/bitacora.test.ts`
 Expected: FAIL — no existe `src/modules/auditoria/routes.ts`.
 
-- [ ] **Step 3: Implementar** `listarAuditoria` con filtros de fecha y la vista de solo lectura para el administrador.
+- [x] **Step 3: Implementar** `listarAuditoria` con filtros de fecha y la vista de solo lectura para el administrador.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/bitacora.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/auditoria src/views/admin tests/bitacora.test.ts
