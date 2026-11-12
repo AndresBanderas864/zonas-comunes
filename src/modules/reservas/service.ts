@@ -3,6 +3,7 @@ import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/prom
 import { z } from 'zod';
 import { withTransaction } from '../../db/pool';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../lib/errors';
+import { notificarApartamento } from '../notificaciones/service';
 import type { UsuarioSesion } from '../auth/sessions';
 import { obtenerParametros } from '../zonas/parametros';
 import { obtenerZonaActiva } from './repository';
@@ -267,6 +268,17 @@ async function transaccionReserva(
       datos.cupos,
     ],
   );
+
+  // Notificacion in-app a los residentes activos, en la MISMA transaccion:
+  // si la reserva se revierte, la notificacion tambien. Va despues de los
+  // locks APARTAMENTO -> OCUPACION_BLOQUE -> RESERVA; el INSERT solo anade
+  // locks compartidos (FK) sobre USUARIO y la propia RESERVA, sin ciclo nuevo.
+  await notificarApartamento(conn, apartamentoId, {
+    reservaId: id,
+    tipo: 'CONFIRMACION',
+    titulo: 'Reserva confirmada',
+    mensaje: `Tu reserva del ${datos.fecha} de ${datos.horaInicio} a ${bloque.horaFin} por ${datos.cupos} cupo(s) quedó confirmada.`,
+  });
 
   const [filas] = await conn.query<RowDataPacket[]>(
     `SELECT id, apartamento_id, zona_id, DATE_FORMAT(fecha, '%Y-%m-%d') fecha,

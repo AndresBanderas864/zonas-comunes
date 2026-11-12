@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '../../db/pool';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../lib/errors';
 import { registrarAuditoria } from '../auditoria/service';
+import { notificarApartamento } from '../notificaciones/service';
 import type { UsuarioSesion } from '../auth/sessions';
 import { conReintento, type EstadoReserva } from './service';
 
@@ -92,6 +93,19 @@ async function transaccionCancelacion(
      WHERE zona_id = ? AND fecha = ? AND hora_inicio = ?`,
     [reserva.cupos, reserva.zona_id, reserva.fecha, reserva.hora_inicio],
   );
+
+  // Notificacion a los residentes activos, en la misma transaccion (mismo
+  // razonamiento que en transaccionReserva: se revierte con el ROLLBACK y
+  // no introduce un ciclo nuevo de locks).
+  if (reserva.apartamento_id) {
+    const motivoTexto = motivo ? ` Motivo: ${motivo}.` : '';
+    await notificarApartamento(conn, reserva.apartamento_id, {
+      reservaId: reserva.id,
+      tipo: 'CANCELACION',
+      titulo: 'Reserva cancelada',
+      mensaje: `La reserva del ${reserva.fecha} de ${String(reserva.hora_inicio).slice(0, 5)} quedó cancelada.${motivoTexto}`,
+    });
+  }
 
   if (canceladaPor === 'ADMINISTRADOR') {
     await registrarAuditoria(conn, {
