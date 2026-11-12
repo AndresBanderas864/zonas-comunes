@@ -93,7 +93,9 @@ describe('autenticacion, roles y CSRF', () => {
       .post('/reservas')
       .set('Cookie', residente.cookie)
       .send({ _csrf: csrf });
-    expect(res.status).toBe(404);
+    // Pasa el filtro CSRF y llega al enrutador de reservas, que responde 400
+    // por validacion (antes de montar el enrutador el request caia en 404).
+    expect(res.status).toBe(400);
   });
 
   it('con sesion revocada a mitad de un POST responde 401 y redirige a /login', async () => {

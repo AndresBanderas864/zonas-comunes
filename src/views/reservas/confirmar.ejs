@@ -1,0 +1,24 @@
+<section>
+  <h1>Confirmar reserva</h1>
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+  <p>Revisa los datos antes de confirmar la reserva.</p>
+  <ul>
+    <li>Fecha: <%= valores.fecha %></li>
+    <li>Hora de inicio: <%= valores.horaInicio %></li>
+    <li>Cupos solicitados: <%= valores.cupos %></li>
+  </ul>
+  <form method="post" action="/reservas">
+    <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% } %>
+    <input type="hidden" name="zonaId" value="<%= valores.zonaId %>" />
+    <input type="hidden" name="fecha" value="<%= valores.fecha %>" />
+    <input type="hidden" name="horaInicio" value="<%= valores.horaInicio %>" />
+    <input type="hidden" name="cupos" value="<%= valores.cupos %>" />
+    <input type="hidden" name="confirmar" value="1" />
+    <p><button class="boton" type="submit">Confirmar reserva</button></p>
+  </form>
+  <p><a href="/reservar">Cancelar y volver a disponibilidad</a></p>
+</section>
