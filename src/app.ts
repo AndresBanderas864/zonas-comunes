@@ -7,6 +7,7 @@ import { ConflictError } from './lib/errors';
 import { errorHandler } from './middleware/error';
 import { flash } from './middleware/flash';
 import { layoutRender } from './middleware/render';
+import { authRoutes } from './modules/auth/routes';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -30,6 +31,8 @@ export function createApp() {
       next(error);
     }
   });
+
+  app.use(authRoutes);
 
   if (process.env.NODE_ENV === 'test') {
     app.get('/_test/conflict', () => {
