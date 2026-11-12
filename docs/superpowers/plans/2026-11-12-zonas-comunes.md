@@ -818,20 +818,20 @@ git commit -m "feat: vista de vigilancia de solo lectura"
   - `despacharPendientes(canal: CanalEnvio, limite?: number): Promise<{ enviados: number; fallidos: number }>` — máximo 3 intentos, luego `FALLIDO`
   - `despachadorConsola: CanalEnvio` (escribe en `console.info`)
 
-- [ ] **Step 1: Tests** — confirmar crea una `NOTIFICACION` por residente activo y una `ENVIO_NOTIFICACION` por canal; el despachador marca `ENVIADO`; con un canal que falla 3 veces queda `FALLIDO` y `intentos = 3`; la bandeja solo muestra las del usuario y marca leídas.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** — confirmar crea una `NOTIFICACION` por residente activo y una `ENVIO_NOTIFICACION` por canal; el despachador marca `ENVIADO`; con un canal que falla 3 veces queda `FALLIDO` y `intentos = 3`; la bandeja solo muestra las del usuario y marca leídas.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/notificaciones.test.ts`
 Expected: FAIL — no existe `src/modules/notificaciones`.
 
-- [ ] **Step 3: Implementar** `crearNotificacion`, `notificarApartamento`, el despachador con reintentos y la bandeja; conectar la creación de notificaciones a `crearReserva` y `cancelarReserva`.
+- [x] **Step 3: Implementar** `crearNotificacion`, `notificarApartamento`, el despachador con reintentos y la bandeja; conectar la creación de notificaciones a `crearReserva` y `cancelarReserva`.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/notificaciones.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/notificaciones src/modules/reservas src/views/notificaciones tests/notificaciones.test.ts
