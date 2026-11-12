@@ -779,20 +779,20 @@ git commit -m "feat: historial de residente y supervision administrativa"
 **Interfaces:**
 - Produces: `reservasDelDia(fecha: string): Promise<{ apartamento: string; zona: string; horaInicio: string; horaFin: string; cupos: number }[]>`.
 
-- [ ] **Step 1: Tests** — `VIGILANTE` ve la lista; un `POST` del vigilante a cualquier ruta de escritura devuelve 403; un `RESIDENTE` no entra.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** — `VIGILANTE` ve la lista; un `POST` del vigilante a cualquier ruta de escritura devuelve 403; un `RESIDENTE` no entra.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/vigilancia.test.ts`
 Expected: FAIL — no existe `src/modules/reservas/vigilancia.ts`.
 
-- [ ] **Step 3: Implementar** `reservasDelDia` y la vista de solo lectura; la ruta exige `requireRole('VIGILANTE','ADMINISTRADOR')` y no registra formularios de escritura.
+- [x] **Step 3: Implementar** `reservasDelDia` y la vista de solo lectura; la ruta exige `requireRole('VIGILANTE','ADMINISTRADOR')` y no registra formularios de escritura.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/vigilancia.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/reservas/vigilancia.ts src/views/vigilancia tests/vigilancia.test.ts
