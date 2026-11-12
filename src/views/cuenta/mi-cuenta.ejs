@@ -1,0 +1,44 @@
+<section>
+  <h1>Mi cuenta</h1>
+
+  <% if (error) { %>
+  <p class="mensaje mensaje-error" role="alert"><%= error %></p>
+  <% } %>
+
+  <h2>Datos personales</h2>
+  <dl>
+    <dt>Nombre</dt>
+    <dd><%= usuario.nombre %></dd>
+    <dt>Correo</dt>
+    <dd><%= usuario.correo %></dd>
+  </dl>
+
+  <h2>Rectificar nombre</h2>
+  <form method="post" action="/mi-cuenta/nombre">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <p>
+      <label for="nombre">Nombre</label><br />
+      <input id="nombre" name="nombre" type="text" required minlength="2"
+        maxlength="120" autocomplete="name" value="<%= nombreForm %>" />
+    </p>
+    <p><button type="submit">Guardar nombre</button></p>
+  </form>
+  <p>Para cambiar el correo electrónico contacta a la administración.</p>
+
+  <h2>Política de datos personales</h2>
+  <% if (politica) { %>
+  <p>Versión <%= politica.version %>, vigente desde
+    <%= politica.vigenteDesde.slice(0, 10) %>.</p>
+  <p><%= politica.contenido %></p>
+  <% if (aceptada) { %>
+  <p>Ya aceptaste esta versión de la política.</p>
+  <% } else { %>
+  <form method="post" action="/mi-cuenta/politica">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <p><button type="submit">Aceptar política</button></p>
+  </form>
+  <% } %>
+  <% } else { %>
+  <p>No hay una política de datos vigente publicada.</p>
+  <% } %>
+</section>
