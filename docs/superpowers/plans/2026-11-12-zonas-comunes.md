@@ -557,7 +557,7 @@ git commit -m "feat: parametros de reserva configurables"
   - `type BloqueDisponible = { horaInicio: string; horaFin: string; aforo: number; cuposDisponibles: number }`
   - Rutas: `GET /reservar` (lista de zonas activas), `GET /reservar/:zonaId/:fecha` (bloques del día).
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('genera bloques de 120 minutos entre 08:00 y 20:00', () => {
@@ -576,19 +576,19 @@ it('GET /reservar/:zona/:fecha muestra solo bloques con cupos disponibles', asyn
 });
 ```
 
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/disponibilidad.test.ts`
 Expected: FAIL — no existe `src/modules/reservas/bloques`.
 
-- [ ] **Step 3: Implementar** `generarBloques`, `obtenerDisponibilidad` (consulta a `HORARIO_ZONA` por `dia_semana` y `LEFT JOIN OCUPACION_BLOQUE`) y las vistas de elegir zona y bloques.
+- [x] **Step 3: Implementar** `generarBloques`, `obtenerDisponibilidad` (consulta a `HORARIO_ZONA` por `dia_semana` y `LEFT JOIN OCUPACION_BLOQUE`) y las vistas de elegir zona y bloques.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/disponibilidad.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/reservas src/views/reservas tests/disponibilidad.test.ts
