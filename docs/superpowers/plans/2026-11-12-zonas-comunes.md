@@ -915,20 +915,20 @@ git commit -m "feat: estadisticas de ocupacion, horas pico y cancelaciones"
 **Interfaces:**
 - Produces: `type TextoLegal = { id: string; tipo: 'AUTORIZACION'|'POLITICA'|'AVISO_PRIVACIDAD'; version: number; contenido: string; vigenteDesde: string }`; `actualizarNombre(usuarioId: string, nombre: string): Promise<void>`; `aceptarPolitica(usuarioId: string, textoLegalId: string): Promise<void>`; `politicaVigente(): Promise<TextoLegal>`.
 
-- [ ] **Step 1: Tests** — rectificar nombre persiste y deja `BITACORA`; el formulario de correo no existe (RF-08 fuera); aceptar política crea `AUTORIZACION_DATOS` una sola vez por versión.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Tests** — rectificar nombre persiste y deja `BITACORA`; el formulario de correo no existe (RF-08 fuera); aceptar política crea `AUTORIZACION_DATOS` una sola vez por versión.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/cuenta.test.ts`
 Expected: FAIL — no existe `src/modules/datos-personales`.
 
-- [ ] **Step 3: Implementar** `actualizarNombre`, `aceptarPolitica`, `politicaVigente` y la vista `/mi-cuenta`; no hay campo de correo (RF-08 fuera).
+- [x] **Step 3: Implementar** `actualizarNombre`, `aceptarPolitica`, `politicaVigente` y la vista `/mi-cuenta`; no hay campo de correo (RF-08 fuera).
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/cuenta.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/datos-personales src/views/cuenta tests/cuenta.test.ts
