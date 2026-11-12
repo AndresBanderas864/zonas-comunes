@@ -3,7 +3,7 @@ import { AppError } from '../lib/errors';
 
 export function errorHandler(
   err: unknown,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction,
 ): void {
@@ -16,6 +16,11 @@ export function errorHandler(
 
   if (process.env.NODE_ENV !== 'production') {
     console.error(err);
+  }
+
+  if (req.accepts(['json', 'html']) === 'html') {
+    res.status(500).render('errors/500', { titulo: 'Error inesperado' });
+    return;
   }
 
   res.status(500).json({

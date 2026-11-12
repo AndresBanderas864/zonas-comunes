@@ -1,0 +1,7 @@
+<% if (flash.length > 0) { %>
+<ul class="mensajes" aria-live="polite">
+  <% flash.forEach(function (mensaje) { %>
+  <li class="mensaje mensaje-<%= mensaje.tipo %>"><%= mensaje.mensaje %></li>
+  <% }) %>
+</ul>
+<% } %>

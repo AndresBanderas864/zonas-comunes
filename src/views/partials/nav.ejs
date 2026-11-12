@@ -1,0 +1,24 @@
+<nav aria-label="Navegación principal">
+  <ul class="nav">
+    <li><a href="/">Inicio</a></li>
+    <% if (!usuario) { %>
+    <li><a href="/login">Iniciar sesión</a></li>
+    <% } else if (usuario.rol === 'RESIDENTE') { %>
+    <li><a href="/reservar">Reservar</a></li>
+    <li><a href="/mis-reservas">Mis reservas</a></li>
+    <li><a href="/notificaciones">Notificaciones</a></li>
+    <li><a href="/mi-cuenta">Mi cuenta</a></li>
+    <% } else if (usuario.rol === 'ADMINISTRADOR') { %>
+    <li><a href="/admin/zonas">Zonas</a></li>
+    <li><a href="/admin/parametros">Parámetros</a></li>
+    <li><a href="/admin/apartamentos">Apartamentos</a></li>
+    <li><a href="/admin/invitaciones">Invitaciones</a></li>
+    <li><a href="/admin/usuarios">Usuarios</a></li>
+    <li><a href="/admin/reservas">Reservas</a></li>
+    <li><a href="/admin/estadisticas">Estadísticas</a></li>
+    <li><a href="/admin/bitacora">Bitácora</a></li>
+    <% } else if (usuario.rol === 'VIGILANTE') { %>
+    <li><a href="/vigilancia">Vigilancia</a></li>
+    <% } %>
+  </ul>
+</nav>
