@@ -21,6 +21,16 @@ function tokenInvitacionDe(html: string): string {
   return m[1];
 }
 
+// Lee la fila del bloque 08:00-10:00 de la pagina de disponibilidad:
+// devuelve [aforo, cuposDisponibles] tal como los renderiza el servicio.
+function filaDelBloque(html: string): [number, number] {
+  const m = html.match(
+    /08:00 - 10:00<\/th>\s*<td>(\d+)<\/td>\s*<td>(\d+)<\/td>/,
+  );
+  if (!m) throw new Error('No se encontro la fila del bloque 08:00');
+  return [Number(m[1]), Number(m[2])];
+}
+
 describe('e2e: recorrido completo', () => {
   it(
     'migrar -> seed -> admin crea invitacion -> residente se registra y verifica -> ' +
@@ -120,9 +130,13 @@ describe('e2e: recorrido completo', () => {
       expect(zona).toBeDefined();
 
       const fecha = mananaBogota();
-      const disponibilidad = await residente.get(`/reservar/${zona.id}/${fecha}`);
+      const urlDisponibilidad = `/reservar/${zona.id}/${fecha}`;
+      const disponibilidad = await residente.get(urlDisponibilidad);
       expect(disponibilidad.status).toBe(200);
       expect(disponibilidad.text).toContain('08:00');
+      const [aforo, libresAntes] = filaDelBloque(disponibilidad.text);
+      expect(aforo).toBe(20);
+      expect(libresAntes).toBe(20);
 
       // reservar (un bloque de 120 min, 2 cupos)
       const reservar = await residente
@@ -140,6 +154,12 @@ describe('e2e: recorrido completo', () => {
       const reservaId = String(reservar.body.reserva.id);
       expect(reservar.body.reserva.estado).toBe('CONFIRMADA');
 
+      // el aforo libre del bloque baja en los cupos reservados
+      const dispTrasReserva = await residente.get(urlDisponibilidad);
+      expect(dispTrasReserva.status).toBe(200);
+      const [, libresTrasReserva] = filaDelBloque(dispTrasReserva.text);
+      expect(libresTrasReserva).toBe(aforo - 2);
+
       // notificacion en bandeja
       const bandeja = await residente.get('/notificaciones');
       expect(bandeja.status).toBe(200);
@@ -151,6 +171,12 @@ describe('e2e: recorrido completo', () => {
         .set('Accept', 'application/json')
         .send({ motivo: 'prueba e2e', _csrf: csrfResidente });
       expect(cancelar.status).toBe(204);
+
+      // la cancelacion devuelve los cupos al bloque
+      const dispTrasCancelar = await residente.get(urlDisponibilidad);
+      expect(dispTrasCancelar.status).toBe(200);
+      const [, libresTrasCancelar] = filaDelBloque(dispTrasCancelar.text);
+      expect(libresTrasCancelar).toBe(aforo);
 
       const bandejaTrasCancelar = await residente.get('/notificaciones');
       expect(bandejaTrasCancelar.status).toBe(200);

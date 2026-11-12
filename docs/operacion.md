@@ -43,8 +43,12 @@ salto correcto (p. ej. `1`) antes de montar los middlewares de límites de
 peticiones. Sin eso, `express-rate-limit` ve siempre la IP del proxy en
 `req.ip` y los límites de `/login` (10/15 min) y `/recuperar` (5/15 min)
 terminan bloqueando el despliegue **completo** tras unos pocos intentos.
-`express-rate-limit` además lanzará un error de configuración si detecta un
-proxy sin `trust proxy` activado.
+Nota sobre la advertencia de la librería: con `trust proxy` activado de forma
+permisiva (p. ej. `true` o un número de saltos), `express-rate-limit` valida
+el encabezado `X-Forwarded-For` y emite su advertencia de validación si la
+cadena de IPs no es consistente; con `trust proxy` desactivado la librería
+**no puede** detectar que hay un proxy delante, así que no advierte nada: el
+síntoma silencioso es exactamente el bloqueo global descrito arriba.
 
 ### Base de datos
 
