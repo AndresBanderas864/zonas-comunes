@@ -95,8 +95,13 @@ async function transaccionCancelacion(
   );
 
   // Notificacion a los residentes activos, en la misma transaccion (mismo
-  // razonamiento que en transaccionReserva: se revierte con el ROLLBACK y
-  // no introduce un ciclo nuevo de locks).
+  // razonamiento que en transaccionReserva: se revierte con el ROLLBACK).
+  // Orden completo de locks de esta transaccion, identico al de la reserva:
+  //   APARTAMENTO -> OCUPACION_BLOQUE -> RESERVA -> USUARIO(S) -> NOTIFICACION
+  // El hook solo anade locks compartidos (FK) sobre USUARIO y la RESERVA ya
+  // exclusiva. ATENCION: cualquier transaccion futura que tome un lock sobre
+  // USUARIO antes de RESERVA formaria ciclo y deadlock con este orden; toda
+  // tx que toque estas filas debe respetar la cadena anterior.
   if (reserva.apartamento_id) {
     const motivoTexto = motivo ? ` Motivo: ${motivo}.` : '';
     await notificarApartamento(conn, reserva.apartamento_id, {

@@ -270,9 +270,14 @@ async function transaccionReserva(
   );
 
   // Notificacion in-app a los residentes activos, en la MISMA transaccion:
-  // si la reserva se revierte, la notificacion tambien. Va despues de los
-  // locks APARTAMENTO -> OCUPACION_BLOQUE -> RESERVA; el INSERT solo anade
-  // locks compartidos (FK) sobre USUARIO y la propia RESERVA, sin ciclo nuevo.
+  // si la reserva se revierte, la notificacion tambien. Orden completo de
+  // locks de esta transaccion:
+  //   APARTAMENTO -> OCUPACION_BLOQUE -> RESERVA -> USUARIO(S) -> NOTIFICACION
+  // El hook solo anade locks compartidos (FK) sobre las filas de USUARIO y
+  // la propia RESERVA, al final de la cadena. ATENCION: cualquier transaccion
+  // futura que tome un lock sobre USUARIO antes de RESERVA formaria ciclo y
+  // deadlock con este orden; toda tx que toque estas filas debe respetar la
+  // cadena anterior.
   await notificarApartamento(conn, apartamentoId, {
     reservaId: id,
     tipo: 'CONFIRMACION',

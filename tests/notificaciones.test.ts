@@ -267,6 +267,43 @@ describe('despachador', () => {
     });
   });
 
+  it('dos despachadores concurrentes nunca ejecutan enviar() sobre el mismo envio', async () => {
+    // El claim es la transaccion unica de la pasada: la seleccion FOR UPDATE
+    // SKIP LOCKED conserva los locks hasta el commit, asi que el perdedor ni
+    // siquiera ve las filas del ganador.
+    const usuario = await crearUsuarioConApartamento('RESIDENTE', '101');
+    for (let i = 0; i < 4; i++) {
+      await nuevaNotificacion(usuario.id, `Concurren ${i}`);
+    }
+
+    const enviosVistos = new Map<string, number>();
+    const lento: CanalEnvio = {
+      canal: 'CORREO',
+      async enviar(envio) {
+        enviosVistos.set(envio.id, (enviosVistos.get(envio.id) ?? 0) + 1);
+        await new Promise((resolver) => setTimeout(resolver, 25));
+      },
+    };
+
+    const [primera, segunda] = await Promise.all([
+      despacharPendientes(lento),
+      despacharPendientes(lento),
+    ]);
+
+    expect(primera.enviados + segunda.enviados).toBe(4);
+    expect(enviosVistos.size).toBe(4);
+    expect([...enviosVistos.values()].every((veces) => veces === 1)).toBe(true);
+
+    const [estado] = await query<{ enviado: number; pendiente: number }>(
+      `SELECT SUM(e.estado = 'ENVIADO') enviado, SUM(e.estado = 'PENDIENTE') pendiente
+       FROM ENVIO_NOTIFICACION e
+       JOIN NOTIFICACION n ON n.id = e.notificacion_id
+       WHERE n.titulo LIKE 'Concurren %' AND e.canal = 'CORREO'`,
+    );
+    expect(Number(estado.enviado)).toBe(4);
+    expect(Number(estado.pendiente)).toBe(0);
+  });
+
   it('el limite acota cuantos envios se procesan por pasada', async () => {
     const usuario = await crearUsuarioConApartamento('RESIDENTE', '101');
     for (let i = 0; i < 3; i++) {
