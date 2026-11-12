@@ -488,7 +488,7 @@ Sin esta tarea no hay forma de crear una invitación desde la aplicación, y sin
   - `listarUsuarios(): Promise<Usuario[]>`, `desactivarUsuario(usuarioId: string, actor: UsuarioSesion): Promise<void>` — estado `DESACTIVADA`, revoca sus `SESION` y deja `BITACORA`. Rechaza desactivarse a sí mismo y dejar el sistema sin administradores activos.
   - Rutas: `GET/POST /admin/apartamentos`, `GET/POST /admin/apartamentos/:id`, `POST /admin/apartamentos/:id/eliminar`, `GET/POST /admin/invitaciones`, `POST /admin/invitaciones/:id/revocar`, `GET /admin/usuarios`, `POST /admin/usuarios/:id/desactivar`.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('crea un apartamento y rechaza torre+numero duplicado', async () => { /* 302 + fila; segundo intento 409 */ });
@@ -499,13 +499,13 @@ it('desactivar un usuario revoca sus sesiones y deja BITACORA', async () => { /*
 it('un residente recibe 403 en /admin/usuarios y /admin/invitaciones', async () => {});
 ```
 
-- [ ] **Step 2: Verlo fallar.** Run: `npx vitest run tests/apartamentos.test.ts tests/invitaciones.test.ts tests/usuarios-admin.test.ts` → FAIL.
+- [x] **Step 2: Verlo fallar.** Run: `npx vitest run tests/apartamentos.test.ts tests/invitaciones.test.ts tests/usuarios-admin.test.ts` → FAIL.
 
-- [ ] **Step 3: Implementar** con `requireRole('ADMINISTRADOR')`. La invitación se muestra en pantalla **una sola vez** (el token en claro no se recupera); la lista muestra solo estado y vencimiento. Toda acción llama a `registrarAuditoria` con `detalle` sin tokens ni hashes.
+- [x] **Step 3: Implementar** con `requireRole('ADMINISTRADOR')`. La invitación se muestra en pantalla **una sola vez** (el token en claro no se recupera); la lista muestra solo estado y vencimiento. Toda acción llama a `registrarAuditoria` con `detalle` sin tokens ni hashes.
 
-- [ ] **Step 4: Verificar.** Run: `npx vitest run tests/apartamentos.test.ts tests/invitaciones.test.ts tests/usuarios-admin.test.ts` → PASS.
+- [x] **Step 4: Verificar.** Run: `npx vitest run tests/apartamentos.test.ts tests/invitaciones.test.ts tests/usuarios-admin.test.ts` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/apartamentos src/modules/invitaciones src/modules/usuarios src/views/admin tests/apartamentos.test.ts tests/invitaciones.test.ts tests/usuarios-admin.test.ts
