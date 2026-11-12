@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/error';
 import { flash } from './middleware/flash';
 import { layoutRender } from './middleware/render';
 import { authRoutes } from './modules/auth/routes';
+import { loginRoutes } from './modules/auth/login-routes';
 
 const raizProyecto = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -32,6 +33,7 @@ export function createApp() {
     }
   });
 
+  app.use(loginRoutes);
   app.use(authRoutes);
 
   if (process.env.NODE_ENV === 'test') {

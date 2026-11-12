@@ -16,6 +16,7 @@ import {
   marcarInvitacionUsada,
   marcarTokenUsado,
   obtenerInvitacionPublica,
+  buscarUsuarioPorCorreo,
 } from './repository';
 
 export type Usuario = {
@@ -27,6 +28,41 @@ export type Usuario = {
   apartamentoId: string | null;
   correoVerificado: boolean;
 };
+
+export type UsuarioLogin = {
+  id: string;
+  nombre: string;
+  correo: string;
+  rol: Rol;
+  estado: 'PENDIENTE' | 'ACTIVA' | 'DESACTIVADA' | 'BAJA';
+  apartamentoId: string | null;
+  correoVerificado: boolean;
+  passwordHash: string;
+  intentosFallidos: number;
+  bloqueadoHasta: Date | null;
+};
+
+export async function buscarUsuarioParaLogin(
+  correo: string,
+): Promise<UsuarioLogin | null> {
+  const fila = await buscarUsuarioPorCorreo(correo);
+  if (!fila) return null;
+
+  return {
+    id: fila.id,
+    nombre: fila.nombre,
+    correo: fila.correo,
+    rol: fila.rol,
+    estado: fila.estado,
+    apartamentoId: fila.apartamento_id,
+    correoVerificado: Boolean(fila.correo_verificado),
+    passwordHash: fila.password_hash,
+    intentosFallidos: Number(fila.intentos_fallidos),
+    bloqueadoHasta: fila.bloqueado_hasta
+      ? new Date(fila.bloqueado_hasta)
+      : null,
+  };
+}
 
 export const esquemaRegistro = z.object({
   nombre: z

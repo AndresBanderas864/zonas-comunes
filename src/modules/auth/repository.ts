@@ -1,5 +1,6 @@
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 import { query } from '../../db/pool';
+import type { Rol } from '../../lib/types';
 
 export type InvitacionFila = {
   id: string;
@@ -16,6 +17,31 @@ export type TokenVerificacionFila = {
   usado_en: Date | null;
   vence_en: Date;
 };
+
+export type UsuarioLoginFila = {
+  id: string;
+  rol: Rol;
+  apartamento_id: string | null;
+  nombre: string;
+  correo: string;
+  password_hash: string;
+  estado: 'PENDIENTE' | 'ACTIVA' | 'DESACTIVADA' | 'BAJA';
+  correo_verificado: number;
+  intentos_fallidos: number;
+  bloqueado_hasta: Date | null;
+};
+
+export async function buscarUsuarioPorCorreo(
+  correo: string,
+): Promise<UsuarioLoginFila | null> {
+  const filas = await query<UsuarioLoginFila>(
+    `SELECT id, rol, apartamento_id, nombre, correo, password_hash, estado,
+            correo_verificado, intentos_fallidos, bloqueado_hasta
+     FROM USUARIO WHERE correo = ?`,
+    [correo],
+  );
+  return filas[0] ?? null;
+}
 
 export async function buscarInvitacionPorHash(
   conn: PoolConnection,
