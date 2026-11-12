@@ -522,20 +522,20 @@ git commit -m "feat: apartamentos, invitaciones y desactivacion de cuentas"
 **Interfaces:**
 - Produces: `type Parametros = { maxReservasSemana: number; maxReservasDia: number; anticipacionDias: number }`; `obtenerParametros(): Promise<Parametros>`, `actualizarParametros(p: Parametros, actorId: string): Promise<void>`.
 
-- [ ] **Step 1: Test** — `POST /admin/parametros` con `maxReservasDia > maxReservasSemana` devuelve 400 y no cambia la fila; un cambio válido persiste y deja `BITACORA` con `accion='parametros.actualizar'`.
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 1: Test** — `POST /admin/parametros` con `maxReservasDia > maxReservasSemana` devuelve 400 y no cambia la fila; un cambio válido persiste y deja `BITACORA` con `accion='parametros.actualizar'`.
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/parametros.test.ts`
 Expected: FAIL — no existe `src/modules/zonas/parametros.ts`.
 
-- [ ] **Step 3: Implementar** `obtenerParametros`/`actualizarParametros` sobre la fila única `PARAMETRO_RESERVA` y la ruta `GET/POST /admin/parametros` con `requireRole('ADMINISTRADOR')`.
+- [x] **Step 3: Implementar** `obtenerParametros`/`actualizarParametros` sobre la fila única `PARAMETRO_RESERVA` y la ruta `GET/POST /admin/parametros` con `requireRole('ADMINISTRADOR')`.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/parametros.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/zonas/parametros.ts src/views/admin/parametros.ejs tests/parametros.test.ts
