@@ -396,7 +396,7 @@ git commit -m "feat: autenticacion, roles y proteccion CSRF"
 **Interfaces:**
 - Produces: `solicitarRecuperacion(correo: string): Promise<string | null>` (devuelve el token en claro solo para el log), `restablecerPassword(token: string, nueva: string): Promise<void>` — `TOKEN_VERIFICACION` tipo `RESTABLECER_PASSWORD`, vence en 1 hora, un solo uso.
 
-- [ ] **Step 1: Tests**
+- [x] **Step 1: Tests**
 
 ```ts
 it('correo inexistente responde igual que uno existente', async () => { /* 200 con el mismo mensaje */ });
@@ -404,19 +404,19 @@ it('token válido cambia el hash y queda usado', async () => { /* login con la n
 it('token caducado o usado se rechaza', async () => { /* 400 */ });
 ```
 
-- [ ] **Step 2: Verlo fallar**
+- [x] **Step 2: Verlo fallar**
 
 Run: `npx vitest run tests/auth-recovery.test.ts`
 Expected: FAIL — no existe `src/modules/auth/recovery`.
 
-- [ ] **Step 3: Implementar** `solicitarRecuperacion` y `restablecerPassword`; el "envío" es `console.info` del enlace y la ruta nunca devuelve el token en la respuesta HTTP.
+- [x] **Step 3: Implementar** `solicitarRecuperacion` y `restablecerPassword`; el "envío" es `console.info` del enlace y la ruta nunca devuelve el token en la respuesta HTTP.
 
-- [ ] **Step 4: Verificar**
+- [x] **Step 4: Verificar**
 
 Run: `npx vitest run tests/auth-recovery.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/modules/auth tests/auth-recovery.test.ts
