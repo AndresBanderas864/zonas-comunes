@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { query } from '../../db/pool';
-import { ValidationError } from '../../lib/errors';
+import { validarFecha } from '../../lib/fechas';
 import { requireRole } from '../../middleware/require-role';
 
 // Vista de vigilancia (RF-30): solo lectura del dia. Muestra quien ocupa o
@@ -53,27 +53,6 @@ export async function reservasDelDia(
   }));
 }
 
-// Misma convencion de rutas de reservas y administracion: AAAA-MM-DD con
-// validacion de calendario antes de tocar la base.
-const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/;
-
-function validarFecha(valor: string): string {
-  if (!PATRON_FECHA.test(valor)) {
-    throw new ValidationError('La fecha debe tener formato AAAA-MM-DD');
-  }
-  const [anio, mes, dia] = valor.split('-').map(Number);
-  const ultimoDia = new Date(Date.UTC(anio!, mes ?? 0, 0)).getUTCDate();
-  if (
-    (mes ?? 0) < 1 ||
-    (mes ?? 0) > 12 ||
-    (dia ?? 0) < 1 ||
-    (!Number.isNaN(ultimoDia) && (dia ?? 0) > ultimoDia)
-  ) {
-    throw new ValidationError('La fecha no existe en el calendario');
-  }
-  return valor;
-}
-
 function hoyBogota(): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Bogota',
@@ -87,7 +66,8 @@ export const vigilanciaRoutes = Router();
 
 vigilanciaRoutes.get('/', requireRole('VIGILANTE', 'ADMINISTRADOR'), async (req, res) => {
   const recibido = typeof req.query.fecha === 'string' ? req.query.fecha.trim() : '';
-  const fecha = recibido === '' ? hoyBogota() : validarFecha(recibido);
+  validarFecha(recibido);
+  const fecha = recibido === '' ? hoyBogota() : recibido;
   const reservas = await reservasDelDia(fecha);
   res.render('vigilancia/hoy', { titulo: 'Vigilancia del día', fecha, reservas });
 });

@@ -5,7 +5,7 @@ import { createApp } from '../src/app';
 import { query } from '../src/db/pool';
 import { crearSesion } from '../src/modules/auth/sessions';
 import { generarBloques } from '../src/modules/reservas/bloques';
-import { obtenerDisponibilidad } from '../src/modules/reservas/disponibilidad';
+import { diaSemanaDeFecha, obtenerDisponibilidad } from '../src/modules/reservas/disponibilidad';
 
 // 2026-11-16 = lunes (dia_semana 1) · 2026-11-14 = sabado (dia_semana 6)
 const LUNES = '2026-11-16';
@@ -246,5 +246,41 @@ describe('rutas de reserva', () => {
       .get(`/reservar/${zonaId}/16-11-2026`)
       .set('Cookie', cookie);
     expect(res.status).toBe(400);
+  });
+
+  it('GET /reservar/:zona/:fecha con fecha inexistente responde 400', async () => {
+    // 2026-11-31 no existe: el calendario se detiene en el 30. Antes de la
+    // validacion de calendario, Date.UTC la rodaba al sabado 5 de diciembre
+    // y pintaba una pagina de disponibilidad fantasma (200).
+    const cookie = await cookieResidente();
+    const zonaId = await sembrarZona({
+      nombre: 'Solarium',
+      aforo: 6,
+      duracionMin: 60,
+      horarios: [
+        { diaSemana: 1, apertura: '08:00', cierre: '10:00' },
+        { diaSemana: 6, apertura: '08:00', cierre: '10:00' },
+      ],
+    });
+
+    const res = await request(createApp())
+      .get(`/reservar/${zonaId}/2026-11-31`)
+      .set('Cookie', cookie);
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('diaSemanaDeFecha', () => {
+  it('mapea dias validos a 1..7 (lunes..domingo)', () => {
+    expect(diaSemanaDeFecha('2026-11-16')).toBe(1);
+    expect(diaSemanaDeFecha('2026-11-14')).toBe(6);
+    expect(diaSemanaDeFecha('2026-11-15')).toBe(7);
+  });
+
+  it('devuelve 0 para dias que no existen en su mes', () => {
+    expect(diaSemanaDeFecha('2026-11-31')).toBe(0);
+    expect(diaSemanaDeFecha('2026-02-30')).toBe(0);
+    expect(diaSemanaDeFecha('2026-02-29')).toBe(0);
+    expect(diaSemanaDeFecha('2028-02-29')).toBe(2);
   });
 });

@@ -3,6 +3,7 @@ import type { PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/prom
 import { z } from 'zod';
 import { withTransaction } from '../../db/pool';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../lib/errors';
+import { PATRON_FECHA, validarFecha } from '../../lib/fechas';
 import { notificarApartamento } from '../notificaciones/service';
 import type { UsuarioSesion } from '../auth/sessions';
 import { obtenerParametros } from '../zonas/parametros';
@@ -31,7 +32,6 @@ export type CrearReservaInput = {
   cupos: number;
 };
 
-const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/;
 const PATRON_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const esquemaCrear = z.object({
@@ -320,6 +320,11 @@ export async function crearReserva(
     throw new ValidationError(resultado.error.issues[0].message);
   }
   const datos = resultado.data;
+  // El regex del esquema solo mira el formato: un dia inexistente (AAAA-MM-32
+  // o 2026-06-31) pasaba el rango lexicografico y reventaba el INSERT de
+  // OCUPACION_BLOQUE con MariaDB 1292 (500). Se exige calendario real antes
+  // de abrir cualquier transaccion.
+  validarFecha(datos.fecha);
 
   const zona = await obtenerZonaActiva(datos.zonaId);
   if (!zona) {

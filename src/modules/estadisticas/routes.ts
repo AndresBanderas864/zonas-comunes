@@ -1,7 +1,7 @@
 import { Router } from 'express';
+import { textoConsulta, validarFecha } from '../../lib/fechas';
 import { requireRole } from '../../middleware/require-role';
 import { listarZonasParaFiltro } from '../reservas/consultas';
-import { validarFecha } from '../reservas/routes';
 import {
   cancelacionesPorZona,
   horasPico,
@@ -9,10 +9,6 @@ import {
 } from './queries';
 
 export const adminEstadisticasRoutes = Router();
-
-function textoConsulta(valor: unknown): string | undefined {
-  return typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : undefined;
-}
 
 function hoyBogota(): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -34,9 +30,13 @@ function restarDias(fecha: string, dias: number): string {
 // de que el aforo es el vigente, no un snapshot de la fecha pasada.
 adminEstadisticasRoutes.get('/estadisticas', requireRole('ADMINISTRADOR'), async (req, res) => {
   const hoy = hoyBogota();
+  const desde = textoConsulta(req.query.desde);
+  const hasta = textoConsulta(req.query.hasta);
+  validarFecha(desde);
+  validarFecha(hasta);
   const filtros = {
-    desde: validarFecha(textoConsulta(req.query.desde)) ?? restarDias(hoy, 29),
-    hasta: validarFecha(textoConsulta(req.query.hasta)) ?? hoy,
+    desde: desde ?? restarDias(hoy, 29),
+    hasta: hasta ?? hoy,
     zonaId: textoConsulta(req.query.zonaId),
   };
 

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { textoConsulta, validarFecha } from '../../lib/fechas';
 import { ConflictError, ValidationError } from '../../lib/errors';
 import { requireRole } from '../../middleware/require-role';
 import { crearReserva, type CrearReservaInput, type EstadoReserva } from './service';
@@ -90,48 +91,20 @@ export const adminReservasRoutes = Router();
 
 const ESTADOS_VALIDOS: EstadoReserva[] = ['CONFIRMADA', 'CANCELADA', 'VENCIDA'];
 
-function textoConsulta(valor: unknown): string | undefined {
-  return typeof valor === 'string' && valor.trim() !== '' ? valor.trim() : undefined;
-}
-
-// Misma convencion de disponibilidad-routes: AAAA-MM-DD. Ademas se rechazan
-// fechas inexistentes (2026-13-45), que MariaDB convertiria en warning o
-// error 1292 dentro del WHERE. Exportada para que estadisticas reutilice
-// la misma validacion de rango.
-const PATRON_FECHA = /^\d{4}-\d{2}-\d{2}$/;
-
-export function validarFecha(valor: string | undefined): string | undefined {
-  if (!valor) {
-    return undefined;
-  }
-  if (!PATRON_FECHA.test(valor)) {
-    throw new ValidationError('La fecha debe tener formato AAAA-MM-DD');
-  }
-  const [anio, mes, dia] = valor.split('-').map(Number);
-  // Dia 0 del mes en Date.UTC (mes es 1-based aqui, 0-based alla) es el
-  // ultimo dia del propio mes. Si el calculo desborda y sale NaN (anos
-  // extremos), se omite la comprobacion de calendario: el formato ya se valido.
-  const ultimoDia = new Date(Date.UTC(anio!, mes ?? 0, 0)).getUTCDate();
-  if (
-    (mes ?? 0) < 1 ||
-    (mes ?? 0) > 12 ||
-    (dia ?? 0) < 1 ||
-    (!Number.isNaN(ultimoDia) && (dia ?? 0) > ultimoDia)
-  ) {
-    throw new ValidationError('La fecha no existe en el calendario');
-  }
-  return valor;
-}
-
 adminReservasRoutes.get('/reservas', requireRole('ADMINISTRADOR'), async (req, res) => {
   const estado = textoConsulta(req.query.estado);
   if (estado && !ESTADOS_VALIDOS.includes(estado as EstadoReserva)) {
     throw new ValidationError('El estado indicado no es valido');
   }
 
+  const desde = textoConsulta(req.query.desde);
+  const hasta = textoConsulta(req.query.hasta);
+  validarFecha(desde);
+  validarFecha(hasta);
+
   const filtros: FiltrosReservas = {
-    desde: validarFecha(textoConsulta(req.query.desde)),
-    hasta: validarFecha(textoConsulta(req.query.hasta)),
+    desde,
+    hasta,
     zonaId: textoConsulta(req.query.zonaId),
     estado: estado as EstadoReserva | undefined,
   };

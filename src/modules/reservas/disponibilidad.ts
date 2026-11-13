@@ -36,6 +36,9 @@ type OcupacionFila = {
 };
 
 // dia_semana: 1 = lunes ... 7 = domingo, segun la convencion de HORARIO_ZONA.
+// Un dia inexistente en su mes (2026-11-31, 2026-02-30) cuenta como 0: sin
+// esa comprobacion, Date.UTC lo rodaba al dia siguiente y devolvia el dia de
+// la semana equivocado (disponibilidad fantasma).
 export function diaSemanaDeFecha(fecha: string): number {
   const [anio, mes, dia] = fecha.split('-').map(Number);
   if (
@@ -44,9 +47,12 @@ export function diaSemanaDeFecha(fecha: string): number {
     !Number.isInteger(dia) ||
     mes < 1 ||
     mes > 12 ||
-    dia < 1 ||
-    dia > 31
+    dia < 1
   ) {
+    return 0;
+  }
+  const ultimoDia = new Date(Date.UTC(anio!, mes, 0)).getUTCDate();
+  if (dia > ultimoDia) {
     return 0;
   }
   const js = new Date(Date.UTC(anio!, mes! - 1, dia!)).getUTCDay();

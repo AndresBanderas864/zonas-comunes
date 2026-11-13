@@ -171,6 +171,45 @@ describe('crear reserva', () => {
     expect(await cuposOcupados(zona.id, fecha, BLOQUE)).toBe(0);
   });
 
+  it('rechaza fecha inexistente 2026-06-31 con 400 (no 500)', async () => {
+    const { zona } = await preparar();
+    const usuario = await crearUsuarioConApartamento('RESIDENTE', '101');
+
+    const res = await postReserva(usuario, {
+      zonaId: zona.id,
+      fecha: '2026-06-31',
+      horaInicio: BLOQUE,
+      cupos: 2,
+    });
+
+    expect(res.status).toBe(400);
+    expect(await contarReservas(zona.id)).toBe(0);
+  });
+
+  it('rechaza con 400 un dia inexistente dentro de la ventana (regresion del 500)', async () => {
+    // El regex de formato admite dia 32 y el rango de anticipacion es
+    // lexicografico: con ventana amplia, 'AAAA-MM-32' llegaba al INSERT
+    // ODKU de OCUPACION_BLOQUE y MariaDB respondia 1292 -> 500.
+    const { zona } = await preparar();
+    await query(
+      `INSERT INTO PARAMETRO_RESERVA
+         (id, max_reservas_semana, max_reservas_dia, anticipacion_dias)
+       VALUES (1, 7, 3, 365)`,
+    );
+    const usuario = await crearUsuarioConApartamento('RESIDENTE', '101');
+    const imposible = `${hoyBogota().slice(0, 7)}-32`;
+
+    const res = await postReserva(usuario, {
+      zonaId: zona.id,
+      fecha: imposible,
+      horaInicio: BLOQUE,
+      cupos: 2,
+    });
+
+    expect(res.status).toBe(400);
+    expect(await contarReservas(zona.id)).toBe(0);
+  });
+
   it('rechaza el doble submit en el mismo bloque', async () => {
     // Review Focus 1: un apartamento no termina con dos reservas en el mismo bloque.
     const { zona, fecha } = await preparar();
