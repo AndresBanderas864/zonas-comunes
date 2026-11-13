@@ -173,6 +173,77 @@ describe('parametros de reserva', () => {
     expect(Number(fila.max_reservas_dia)).toBe(3);
   });
 
+  it('rechaza valores sobre el tope: 400, conserva la fila y no audita', async () => {
+    // Topes de negocio: semana 100, dia 31, anticipacion 365. Sin ellos,
+    // un valor >= 2^32 disparaba MySQL 1264 (500) y anticipaciones
+    // gigantes persistian y rompian todo POST /reservas (Invalid Date).
+    const admin = await sembrarAdmin();
+    await sembrarParametros();
+
+    const cuerpos = [
+      cuerpoParametros({ csrf: admin.csrf, maxReservasSemana: '101' }),
+      cuerpoParametros({ csrf: admin.csrf, maxReservasSemana: '100', maxReservasDia: '32' }),
+      cuerpoParametros({ csrf: admin.csrf, anticipacionDias: '366' }),
+      cuerpoParametros({ csrf: admin.csrf, anticipacionDias: '200000000' }),
+      cuerpoParametros({ csrf: admin.csrf, maxReservasSemana: '4294967296' }),
+    ];
+    for (const cuerpo of cuerpos) {
+      const res = await request(createApp())
+        .post('/admin/parametros')
+        .set('Cookie', admin.cookie)
+        .type('form')
+        .send(cuerpo);
+      expect(res.status).toBe(400);
+    }
+
+    const [fila] = await query<{
+      max_reservas_semana: number;
+      max_reservas_dia: number;
+      anticipacion_dias: number;
+    }>(
+      'SELECT max_reservas_semana, max_reservas_dia, anticipacion_dias FROM PARAMETRO_RESERVA WHERE id = 1',
+    );
+    expect(Number(fila.max_reservas_semana)).toBe(7);
+    expect(Number(fila.max_reservas_dia)).toBe(3);
+    expect(Number(fila.anticipacion_dias)).toBe(7);
+
+    const [{ n }] = await query<{ n: number }>(
+      "SELECT COUNT(*) n FROM BITACORA WHERE accion = 'parametros.actualizar'",
+    );
+    expect(n).toBe(0);
+  });
+
+  it('acepta los topes exactos de negocio', async () => {
+    const admin = await sembrarAdmin();
+    await sembrarParametros();
+
+    const res = await request(createApp())
+      .post('/admin/parametros')
+      .set('Cookie', admin.cookie)
+      .type('form')
+      .send(
+        cuerpoParametros({
+          csrf: admin.csrf,
+          maxReservasSemana: '100',
+          maxReservasDia: '31',
+          anticipacionDias: '365',
+        }),
+      );
+
+    expect(res.status).toBe(302);
+
+    const [fila] = await query<{
+      max_reservas_semana: number;
+      max_reservas_dia: number;
+      anticipacion_dias: number;
+    }>(
+      'SELECT max_reservas_semana, max_reservas_dia, anticipacion_dias FROM PARAMETRO_RESERVA WHERE id = 1',
+    );
+    expect(Number(fila.max_reservas_semana)).toBe(100);
+    expect(Number(fila.max_reservas_dia)).toBe(31);
+    expect(Number(fila.anticipacion_dias)).toBe(365);
+  });
+
   it('exige rol ADMINISTRADOR', async () => {
     const usuarioId = randomUUID();
     await query(

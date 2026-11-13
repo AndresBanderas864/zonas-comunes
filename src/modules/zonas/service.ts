@@ -64,17 +64,25 @@ const coerceBooleano = z.preprocess((valor) => {
   return Boolean(valor);
 }, z.boolean());
 
+// Topes de negocio: sin maximo, un aforo >= 2^32 desbordaba INT UNSIGNED
+// (MySQL 1264 -> 500). Los limites bajos los pone cada min() incluido.
 const esquemaZonaInput = z.object({
   nombre: z.string().trim().min(1, 'El nombre es obligatorio').max(80),
-  aforo: z.coerce.number().int().min(1, 'El aforo debe ser mayor que cero'),
+  aforo: z.coerce
+    .number()
+    .int()
+    .min(1, 'El aforo debe ser mayor que cero')
+    .max(10000, 'El aforo no puede superar 10000'),
   duracionBloqueMin: z.coerce
     .number()
     .int()
-    .min(1, 'La duracion del bloque debe ser mayor que cero'),
+    .min(1, 'La duracion del bloque debe ser mayor que cero')
+    .max(1440, 'La duracion del bloque no puede superar 1440 minutos'),
   maxCuposReserva: z.coerce
     .number()
     .int()
-    .min(1, 'Los cupos maximos deben ser mayores que cero'),
+    .min(1, 'Los cupos maximos deben ser mayores que cero')
+    .max(100, 'Los cupos maximos no pueden superar 100'),
   activa: coerceBooleano,
   horarios: z
     .array(esquemaHorario)

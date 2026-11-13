@@ -24,19 +24,25 @@ const VALORES_POR_DEFECTO: Parametros = {
   anticipacionDias: 7,
 };
 
+// Topes de negocio: sin maximo, un valor >= 2^32 reventaba INT UNSIGNED
+// (MySQL 1264 -> 500) y una anticipacion gigantesca persistia, Invalid Date
+// mediante, rompiendo todo POST /reservas hasta el siguiente arreglo manual.
 const esquemaParametros = z.object({
   maxReservasSemana: z.coerce
     .number()
     .int('El maximo semanal debe ser un numero entero')
-    .min(1, 'El maximo semanal debe ser mayor que cero'),
+    .min(1, 'El maximo semanal debe ser mayor que cero')
+    .max(100, 'El maximo semanal no puede superar 100'),
   maxReservasDia: z.coerce
     .number()
     .int('El maximo diario debe ser un numero entero')
-    .min(1, 'El maximo diario debe ser mayor que cero'),
+    .min(1, 'El maximo diario debe ser mayor que cero')
+    .max(31, 'El maximo diario no puede superar 31'),
   anticipacionDias: z.coerce
     .number()
     .int('La anticipacion debe ser un numero entero de dias')
-    .min(1, 'La anticipacion debe ser mayor que cero'),
+    .min(1, 'La anticipacion debe ser mayor que cero')
+    .max(365, 'La anticipacion no puede superar 365 dias'),
 });
 
 function validarParametros(entrada: unknown): Parametros {

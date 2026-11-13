@@ -316,4 +316,58 @@ describe('configuracion de zonas y horarios', () => {
     );
     expect(n).toBe(0);
   });
+
+  it('rechaza valores sobre el tope: 400, no crea la zona y no audita', async () => {
+    // Topes de negocio: aforo 10000, duracion 1440, cupos por reserva 100.
+    // Sin ellos, un aforo >= 2^32 reventaba INT UNSIGNED (MySQL 1264 -> 500).
+    const admin = await sembrarAdmin();
+
+    const cuerpos = [
+      cuerpoZona({ csrf: admin.csrf, nombre: 'Sobre Aforo', aforo: 10001 }),
+      cuerpoZona({ csrf: admin.csrf, nombre: 'Sobre Duracion', duracionBloqueMin: 1441 }),
+      cuerpoZona({ csrf: admin.csrf, nombre: 'Sobre Cupos', aforo: 200, maxCuposReserva: 101 }),
+      cuerpoZona({ csrf: admin.csrf, nombre: 'Desbordado', aforo: 4294967296 }),
+    ];
+    for (const cuerpo of cuerpos) {
+      const res = await request(createApp())
+        .post('/admin/zonas/nueva')
+        .set('Cookie', admin.cookie)
+        .send(cuerpo);
+      expect(res.status).toBe(400);
+    }
+
+    const [{ n }] = await query<{ n: number }>('SELECT COUNT(*) n FROM ZONA');
+    expect(n).toBe(0);
+
+    const [{ b }] = await query<{ b: number }>(
+      "SELECT COUNT(*) b FROM BITACORA WHERE accion = 'zona.crear'",
+    );
+    expect(b).toBe(0);
+  });
+
+  it('acepta los topes exactos de negocio', async () => {
+    const admin = await sembrarAdmin();
+
+    const res = await request(createApp())
+      .post('/admin/zonas/nueva')
+      .set('Cookie', admin.cookie)
+      .send(
+        cuerpoZona({
+          csrf: admin.csrf,
+          nombre: 'Tope',
+          aforo: 10000,
+          duracionBloqueMin: 240,
+          maxCuposReserva: 100,
+        }),
+      );
+
+    expect(res.status).toBe(302);
+
+    const [zona] = await query<{ aforo: number; max_cupos_reserva: number }>(
+      'SELECT aforo, max_cupos_reserva FROM ZONA WHERE nombre = ?',
+      ['Tope'],
+    );
+    expect(Number(zona.aforo)).toBe(10000);
+    expect(Number(zona.max_cupos_reserva)).toBe(100);
+  });
 });
