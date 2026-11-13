@@ -21,6 +21,7 @@ actuales son provisionales y se rediseñarán desde cero; la lógica de negocio
 (capas de servicio y repositorio) y las rutas se conservarán como contrato.
 
 Credenciales y datos de prueba: [docs/CREDENCIALES-DEMO.md](docs/CREDENCIALES-DEMO.md).
+Plan del refactor y backlog v2: [docs/ROADMAP-V2.md](docs/ROADMAP-V2.md).
 
 ## Requisitos
 
