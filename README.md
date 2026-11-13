@@ -9,6 +9,19 @@ bloqueo y recuperación de contraseña.
 Stack: Node.js 22 + TypeScript, Express 5, EJS (+ HTMX), MariaDB 11, Vitest +
 Supertest. Sin ORM: todo el SQL es parametrizado.
 
+## Estado — Versión 1 (prototipo)
+
+Esta es la **primera versión**. El backend, las reglas de negocio, el control
+de aforo bajo concurrencia y la cobertura de requerimientos están completos y
+probados (198 pruebas, recorrido end-to-end incluido).
+
+**La interfaz de usuario (frontend) NO es definitiva: se refactorizará por
+completo en la v2.** Los layouts, componentes visuales y flujos de pantallas
+actuales son provisionales y se rediseñarán desde cero; la lógica de negocio
+(capas de servicio y repositorio) y las rutas se conservarán como contrato.
+
+Credenciales y datos de prueba: [docs/CREDENCIALES-DEMO.md](docs/CREDENCIALES-DEMO.md).
+
 ## Requisitos
 
 - Node.js 22 o superior.
